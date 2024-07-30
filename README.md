@@ -2,6 +2,8 @@
 
 I created this to backup notes from my Supernote Nomad (A6 X2). It will *probably* work on any of the Supernote devices running the most up-to-date software.
 
+**Github Repo: [snbackup](https://github.com/theburningbush/snbackup)**
+
 The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a .note extension) exactly as they are found on the device. If you are interested in converting your notes to PDF or PNG after they've been downloaded, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
 
 It works by using the builtin [**Browse & Access**](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. This feature creates a small http web server directly on the device and makes it possible to browse its files through a web browser. The Supernote device and your computer must be on the same network.
