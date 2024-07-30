@@ -8,16 +8,13 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 ### Steps:
 
-1. Install Python 3.10 or greater along with pip
+1. Install Python 3.10 or newer alongside pip
 
-2. Clone or download this project
+2. Setup your Python virtual environment and install with `pip install snbackup`
 
-3. Setup a Python virtual environment however you'd like and install using `pip install .`  
-I use [pipx](https://github.com/pypa/pipx) to handle this part so the snbackup tool is globally available on my machine.
+3. Create a folder on your computer to store your Supernote backups
 
-4. Create a folder on your computer to store your Supernote backups
-
-5. Edit the provided example `config.json` file and place it into the same directory where you want your backups to be saved.
+4. Edit the provided example `config.json` file and place it into the same directory where you want your backups to be saved.
 
 ### Example config.json:
 ```
@@ -33,9 +30,9 @@ Works the same for Mac or PC. The example above on a Windows machine would autom
 
 The **device_url** needed will be displayed on the Supernote when Browse & Access is enabled. Use that URL from your device here.
 
-6. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on
+5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on
 
-7. Run `snbackup` from your command line or terminal to start the process. This could take a few minutes depending on how many notes you have and how big they are. The first run is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups. You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
+6. Run `snbackup` from your command line or terminal to start the process. This could take a few minutes depending on how many notes you have and how big they are. The first run is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups. You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
 
 The notes are stored "as is" under your local save directory.  
 So if a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/Note/Stuff/Ideas.note` or as `C:\Users\devin\Documents\Supernote\Stuff\Ideas.note` on Windows.
