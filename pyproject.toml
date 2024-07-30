@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snbackup"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx"
+]
+
+[project.scripts]
+snbackup = "src.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/theburningbush/snbackup"
+Issues = "https://github.com/theburningbush/snbackup/issues"
