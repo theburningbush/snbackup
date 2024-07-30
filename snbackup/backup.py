@@ -156,27 +156,24 @@ def backup() -> None:
                       in previous_record_gen(json_file)}
 
     for deleted_note in check_for_deleted(todays_notes, previous_notes):
-        # Ensures it doesn't copy over any old notes that have been deleted from device since last backup
         previous_notes.discard(deleted_note)
 
     if full_backup:
         previous_notes = set()
     
     to_download = todays_notes.difference(previous_notes)
-    # print('New', to_download)
 
     unchanged = todays_notes.intersection(previous_notes)
-    # print('Unchanged', unchanged)
 
     logger.info(f'Downloading {len(to_download)} new notes from device.')
     for new_note in to_download:
         download_response = get_from_device(device_url, new_note.note_uri)
-        new_note.file_bytes = download_response.read()  # Can also use .content
+        new_note.file_bytes = download_response.read()  
         save_note(new_note.full_path, new_note.file_bytes)
 
     logger.info(f'Merging {len(unchanged)} unchanged notes from local disk')
     for current_note in unchanged:
-        local_note = current_note.full_path.read_bytes()  # Reading bytes with pathlib
+        local_note = current_note.full_path.read_bytes()
         save_to_pth = today.joinpath(current_note.note_uri)
         save_note(save_to_pth, local_note)
 
