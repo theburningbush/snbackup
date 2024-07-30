@@ -16,7 +16,7 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 3. Create a folder on your computer to store your Supernote backups
 
-4. Edit the provided example `config.json` file and place it into the same directory where you want your backups to be saved.
+4. **IMPORTANT**: Edit the provided example `config.json` file and place it into the same directory where you want your backups to be saved.
 
 ### Example config.json:
 ```
