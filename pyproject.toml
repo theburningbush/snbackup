@@ -5,6 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "snbackup"
 version = "1.0.0"
+authors = [
+  { name="devdevindev", email="devinwrx@gmail.com" },
+]
+description = "Tool to backup Supernote note files"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
+]
 requires-python = ">=3.10"
 dependencies = [
     "httpx"
