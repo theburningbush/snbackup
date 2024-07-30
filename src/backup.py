@@ -12,7 +12,6 @@ from .utilities import CustomLogger
 
 DEFAULT_HOME = os.getenv('HOME', os.getenv('HOMEPATH'))  # Homepath for Windows
 DEFAULT_SAVE_DIR = f'{DEFAULT_HOME}/Documents/Supernote'
-DEFAULT_DEVICE_URL = 'http://10.10.0.182:8089/'
 DEFAULT_LOCAL_CONFIG = f'{DEFAULT_SAVE_DIR}/config.json'
 DEFAULT_JSON_MD = f'{DEFAULT_SAVE_DIR}/metadata.json'
 
@@ -136,7 +135,7 @@ def backup() -> None:
     config = load_config(Path(config_file))
 
     save_dir = config.get('save_dir', DEFAULT_SAVE_DIR)
-    device_url = config.get('device_url', DEFAULT_DEVICE_URL)
+    device_url = config.get('device_url')
     json_file = Path(DEFAULT_JSON_MD)
 
     create_logger(f'{Path(save_dir)}/snbackup')
