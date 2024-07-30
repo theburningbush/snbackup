@@ -8,7 +8,7 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 ### Steps:
 
-1. Install Python 3.12 or greater along with pip
+1. Install Python 3.10 or greater along with pip
 
 2. Clone or download this project
 
@@ -35,7 +35,7 @@ The **device_url** needed will be displayed on the Supernote when Browse & Acces
 
 6. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on
 
-7. Run `snbackup` from your command line or terminal to start the process. This could take a few minutes depending on how many notes you have and how big they are. The first run is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups. You can force a full backup of all notes by running `supernote -f` or `supernote --full`
+7. Run `snbackup` from your command line or terminal to start the process. This could take a few minutes depending on how many notes you have and how big they are. The first run is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups. You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
 
 The notes are stored "as is" under your local save directory.  
 So if a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/Note/Stuff/Ideas.note` or as `C:\Users\devin\Documents\Supernote\Stuff\Ideas.note` on Windows.
