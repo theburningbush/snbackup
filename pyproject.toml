@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-snbackup = "src.__main__:main"
+snbackup = "snbackup.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/theburningbush/snbackup"
