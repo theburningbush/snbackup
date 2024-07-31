@@ -24,9 +24,9 @@ def create_logger(log_file_name: str) -> None:
     logger = my_logger.get_logger()
 
 
-def user_input() -> tuple[str, bool]:
+def user_input() -> tuple[Path, bool]:
     parser = ArgumentParser()
-    parser.add_argument('-c', '--config', default=DEFAULT_LOCAL_CONFIG, help='Location of local config file to load')
+    parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path of config file')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
     args = parser.parse_args()
     return args.config, args.full
@@ -38,9 +38,9 @@ def load_config(config_pth: Path) -> dict:
         with open(config_pth) as config_in:
             return json.load(config_in)
     except FileNotFoundError:
-        raise SystemExit('JSON config file not found.')
+        raise SystemExit(f'JSON config file not found at {config_pth!s}.')
     except json.JSONDecodeError:
-        raise SystemExit(f'JSON file malformed or invalid. Check config at {config_pth!s}')
+        raise SystemExit(f'JSON file malformed or invalid. Check your config at {config_pth!s}')
 
 
 def get_from_device(base_url: str, uri: str) -> httpx.Response | None:
@@ -131,11 +131,15 @@ def check_for_deleted(current: set, previous: set) -> list[Note]:
 def backup() -> None:
     """Main workflow logic"""
     config_file, full_backup = user_input()
-    config = load_config(Path(config_file))
+    config = load_config(config_file)
 
-    save_dir = config.get('save_dir', DEFAULT_SAVE_DIR)
-    device_url = config.get('device_url')
-    json_file = Path(DEFAULT_JSON_MD)
+    try:
+        save_dir = config['save_dir']
+        device_url = config['device_url']
+    except KeyError:
+        raise SystemExit('Unable to find "save_dir" or "device_url" in config file')
+
+    json_md_file = Path(f'{save_dir}/metadata.json')
 
     create_logger(f'{Path(save_dir)}/snbackup')
     logger.info(f'Device at {device_url}')
@@ -152,7 +156,7 @@ def backup() -> None:
 
     previous_notes = {Note(Path(loc), uri, mod, fsize)
                       for loc, uri, mod, fsize 
-                      in previous_record_gen(json_file)}
+                      in previous_record_gen(json_md_file)}
 
     for deleted_note in check_for_deleted(todays_notes, previous_notes):
         previous_notes.discard(deleted_note)
@@ -177,6 +181,6 @@ def backup() -> None:
         save_note(save_to_pth, local_note)
 
     records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
-    save_records(records, json_file)
+    save_records(records, json_md_file)
 
     logger.info('Backup complete')
