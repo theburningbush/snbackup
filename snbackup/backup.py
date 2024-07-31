@@ -9,11 +9,6 @@ from argparse import ArgumentParser
 from .notes import Note
 from .utilities import CustomLogger
 
-DEFAULT_HOME = os.getenv('HOME', os.getenv('HOMEPATH'))  # Homepath for Windows
-DEFAULT_SAVE_DIR = f'{DEFAULT_HOME}/Documents/Supernote'
-DEFAULT_LOCAL_CONFIG = f'{DEFAULT_SAVE_DIR}/config.json'
-DEFAULT_JSON_MD = f'{DEFAULT_SAVE_DIR}/metadata.json'
-
 
 def create_logger(log_file_name: str) -> None:
     """Sets up a global logger to be used throughout the program"""
