@@ -42,10 +42,10 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 The first run may take a few minutes depending on how big your notes are and how many you have on the device. The first backup is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups.
 
-> You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
+You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
 
 The notes are stored *as is* under your local save directory setup in the config.json file. 
-> If a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/Note/Stuff/Ideas.note` or as `C:\Users\devin\Documents\Supernote\Stuff\Ideas.note` on Windows.
+If a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/Note/Stuff/Ideas.note` or as `C:\Users\devin\Documents\Supernote\Stuff\Ideas.note` on Windows.
   
 
 ### Future plans:
