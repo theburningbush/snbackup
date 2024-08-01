@@ -134,11 +134,12 @@ def backup() -> None:
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config file')
 
-    json_md_file = Path(f'{save_dir}/metadata.json')
+    save_dir = Path(save_dir)
+    json_md_file = Path(save_dir.joinpath('metadata.json'))
 
-    create_logger(f'{Path(save_dir)}/snbackup')
+    create_logger(str(save_dir.joinpath('snbackup')))
     logger.info(f'Device at {device_url}')
-    logger.info(f'Saving to {save_dir}')
+    logger.info(f'Saving to {save_dir.absolute()}')
 
     httpx_response = get_from_device(device_url, 'Note')
     device_note_info = parse_html(httpx_response.text)
