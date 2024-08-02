@@ -22,6 +22,14 @@ dependencies = [
     "httpx"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest"
+]
+lint = [
+    "ruff"
+]
+
 [project.scripts]
 snbackup = "snbackup.__main__:main"
 
