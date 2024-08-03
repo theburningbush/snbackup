@@ -68,7 +68,7 @@ def parse_html(html_text: str) -> list[dict] | None:
 
 def device_uri_gen(url, note_details: list[dict]):
     for note in note_details:
-        if note.get('isDirectory') == False:
+        if not note.get('isDirectory'):
             # Drop the anchor slash to call joinpath later and it work properly
             yield note.get('uri').lstrip('/'), note.get('date'), note.get('size')
         else:
@@ -95,7 +95,7 @@ def save_note(local_pth: Path, note: bytes) -> None:
 
 def save_records(note_records: list[dict], json_md: Path) -> None:
     """Persists today's note metadata to json file"""
-    logger.info(f'Saving note records to metadata json file')
+    logger.info('Saving note records to metadata json file')
     with open(json_md, 'wt') as json_out:
         print(json.dumps(note_records), file=json_out)
 
@@ -107,8 +107,12 @@ def previous_record_gen(json_md: Path):
     try:
         with open(json_md) as json_in:
             previous = json.loads(json_in.read())
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.warning(f'Unable to locate or decode json metadata file: {e}')
+    except FileNotFoundError:
+        logger.warning('Unable to locate note metadata file')
+        logger.info('Creating new file')
+    except json.JSONDecodeError:
+        logger.warning('Unable to decode json in metadata file')
+    finally:
         previous = []
 
     for record in previous:
