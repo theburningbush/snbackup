@@ -19,12 +19,13 @@ def create_logger(log_file_name: str) -> None:
     logger = my_logger.get_logger()
 
 
-def user_input() -> tuple[Path, bool]:
+def user_input() -> tuple[Path, bool, bool]:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path of config file')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
+    parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
     args = parser.parse_args()
-    return args.config, args.full
+    return args.config, args.full, args.inspect
 
 
 def load_config(config_pth: Path) -> dict:
@@ -100,7 +101,7 @@ def save_records(note_records: list[dict], json_md: Path) -> None:
         print(json.dumps(note_records), file=json_out)
 
 
-def previous_record_gen(json_md: Path):
+def previous_record_gen(json_md: Path, previous=None):
     """Retreives last backup metadata from json and
         yields back relevant info to serialize Note objects"""
     
@@ -113,7 +114,7 @@ def previous_record_gen(json_md: Path):
     except json.JSONDecodeError:
         logger.warning('Unable to decode json in metadata file')
     finally:
-        previous = []
+        previous = previous or []
 
     for record in previous:
         yield (record.get('location'), record.get('uri'), 
@@ -129,7 +130,7 @@ def check_for_deleted(current: set, previous: set) -> list[Note]:
 
 def backup() -> None:
     """Main workflow logic"""
-    config_file, full_backup = user_input()
+    config_file, full_backup, inspect = user_input()
     config = load_config(config_file)
 
     try:
@@ -153,11 +154,11 @@ def backup() -> None:
     todays_notes = {Note(today, uri, mdate, size) 
                     for uri, mdate, size 
                     in device_uri_gen(device_url, device_note_info)}
-
+    
     previous_notes = {Note(Path(loc), uri, mod, fsize)
                       for loc, uri, mod, fsize 
                       in previous_record_gen(json_md_file)}
-
+    
     for deleted_note in check_for_deleted(todays_notes, previous_notes):
         previous_notes.discard(deleted_note)
 
@@ -167,6 +168,13 @@ def backup() -> None:
     to_download = todays_notes.difference(previous_notes)
 
     unchanged = todays_notes.intersection(previous_notes)
+
+    if inspect:
+        logger.info('Inspecting changes only...')
+        logger.info('Updated or new notes to be downloaded:')
+        for note in to_download:
+            logger.info(f'Note: {note.note_uri}, Size: {int(note.file_size) / 1000**2:.2f} MB')
+        raise SystemExit()
 
     logger.info(f'Downloading {len(to_download)} new notes from device.')
     for new_note in to_download:
