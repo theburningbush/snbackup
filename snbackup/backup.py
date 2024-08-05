@@ -10,11 +10,12 @@ from .notes import Note
 from .utilities import CustomLogger
 
 
-def create_logger(log_file_name: str) -> None:
+def create_logger(log_file_name: str, *, running_tests=False) -> None:
     """Sets up a global logger to be used throughout the program"""
     global logger
     my_logger = CustomLogger('INFO')
-    my_logger.to_file(log_file_name)
+    if not running_tests:
+        my_logger.to_file(log_file_name)
     my_logger.to_console()
     logger = my_logger.get_logger()
 
@@ -101,7 +102,7 @@ def save_records(note_records: list[dict], json_md: Path) -> None:
         print(json.dumps(note_records), file=json_out)
 
 
-def previous_record_gen(json_md: Path, previous=None):
+def previous_record_gen(json_md: Path, *, previous=None):
     """Retreives last backup metadata from json and
         yields back relevant info to serialize Note objects"""
     
