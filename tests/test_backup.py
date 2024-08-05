@@ -24,8 +24,7 @@ def test_previous_record_gen(metadata):
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb') as temp:
         temp.write(json.dumps(metadata))
         temp.seek(0)  # Reset back to beginning of file after write
-        file_name = temp.name
-        pth = Path(file_name)
+        pth = Path(temp.name)
         data_lst = [(data.get('location'), data.get('uri'), data.get('modified'), data.get('size')) for data in metadata]
         assert list(backup.previous_record_gen(pth)) == data_lst
 
@@ -34,6 +33,6 @@ def test_previous_record_gen(metadata):
         assert list(backup.previous_record_gen(pth)) == []
 
     # Moved out of context so this file is now gone. Hence file not found test
-    not_found_pth = Path(file_name)
+    not_found_pth = Path(temp.name)
     not_found_error = backup.previous_record_gen(pth)
     assert list(not_found_error) == []
