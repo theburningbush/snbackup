@@ -1,5 +1,4 @@
 from snbackup import backup
-from snbackup import utilities
 from tempfile import NamedTemporaryFile
 from pathlib import Path
 import json
