@@ -172,7 +172,7 @@ def backup() -> None:
 
     if inspect:
         logger.info('Inspecting changes only...')
-        logger.info('Updated or new notes to be downloaded:')
+        logger.info('New/updated notes to be downloaded from device:')
         for note in to_download:
             logger.info(f'Note: {note.note_uri}, Size: {int(note.file_size) / 1000**2:.2f} MB')
         raise SystemExit()

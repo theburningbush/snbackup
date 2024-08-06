@@ -19,7 +19,7 @@ def metadata() -> list[dict]:
             {"saved": "2024-07-31", "location": "/Users/devin/Documents/Supernote/2024-07-31", "uri": "Note/Cool.note", "modified": "2024-06-27 16:32:00", "size": 27926564}]
 
 
-def test_previous_record_gen(metadata):
+def test_previous_record_gen(metadata: list[dict]):
     # TODO look at the builtin mktemp for pytest instead of rolling your own you heathen
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb') as temp:
         temp.write(json.dumps(metadata))
@@ -28,7 +28,7 @@ def test_previous_record_gen(metadata):
         data_lst = [(data.get('location'), data.get('uri'), data.get('modified'), data.get('size')) for data in metadata]
         assert list(backup.previous_record_gen(pth)) == data_lst
 
-        temp.write('/jUnK*]')  # Write in bad text so json can't deserialize
+        temp.write('*JUNK*/^Line[{{***')  # Write in bad text so json can't deserialize
         temp.seek(0)
         assert list(backup.previous_record_gen(pth)) == []
 
