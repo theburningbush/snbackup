@@ -29,7 +29,7 @@ def test_previous_record_gen(metadata: list[dict]):
         assert list(backup.previous_record_gen(pth)) == data_lst
 
         temp.write('*JUNK*/^Line[{{***')  # Write in bad text so json can't deserialize
-        temp.seek(0)
+        temp.flush()
         assert list(backup.previous_record_gen(pth)) == []
 
     # Moved out of context so this file is now gone. Hence file not found test
