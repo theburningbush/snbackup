@@ -36,9 +36,9 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 6. There are two ways to run the command from your terminal or command line:
     - `snbackup` 
-        > *This will look for the ` in your current working directory*
-    - `snbackup -c /the/path/to/`
-        > *This optionally specifies the location of the `*  
+        > *This will look for config.json in your current working directory*
+    - `snbackup -c /the/path/to/config.json`
+        > *This optionally specifies the location of the config.json file*  
 
 The first run may take a few minutes depending on how big your notes are and how many you have on the device. The first backup is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups.
 
