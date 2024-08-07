@@ -25,8 +25,9 @@ def user_input() -> tuple[Path, bool, bool]:
     parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path of config file')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
+    parser.add_argument('-u', '--url', help="Override device URL found within config.json")
     args = parser.parse_args()
-    return args.config, args.full, args.inspect
+    return args.config, args.full, args.inspect, args.url
 
 
 def load_config(config_pth: Path) -> dict:
@@ -131,7 +132,7 @@ def check_for_deleted(current: set, previous: set) -> list[Note]:
 
 def backup() -> None:
     """Main workflow logic"""
-    config_file, full_backup, inspect = user_input()
+    config_file, full_backup, inspect, url_override = user_input()
     config = load_config(config_file)
 
     try:
@@ -139,6 +140,10 @@ def backup() -> None:
         device_url = config['device_url']
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config file')
+
+    if url_override:
+        # TODO add validation on this so it looks like valid URL
+        device_url = url_override
 
     save_dir = Path(save_dir)
     json_md_file = Path(save_dir.joinpath('metadata.json'))

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snbackup"
-version = "1.1.0"
+version = "1.2.0"
 authors = [
   { name="devdevindev", email="devinwrx@gmail.com" },
 ]
@@ -13,6 +13,8 @@ readme = "README.md"
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Utilities",

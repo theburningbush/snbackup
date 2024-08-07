@@ -1,12 +1,12 @@
-## Tool to backup notes from Supernote device
+## Utility to backup notes from a Supernote device
 
 I created this cli tool to backup notes from my Supernote Nomad (A6 X2). It will *probably* work on any of the Supernote devices running the most up-to-date software.
 
-**Github Repo: [snbackup](https://github.com/theburningbush/snbackup)**
+**Github repo for [snbackup](https://github.com/theburningbush/snbackup)**
 
-The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a .note extension) exactly as they are found on the device. If you are interested in converting your notes to PDF or PNG after they've been downloaded, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
+The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a `.note` extension) exactly as they are found on the device. If you are interested in converting your notes to PDF or PNG after they've been downloaded, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
 
-It works by using the builtin [**Browse & Access**](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. This feature creates a small web server directly on the device and makes it possible to browse its files through a web browser. The Supernote device and your computer must be on the same network.
+It works by using the builtin [**Browse & Access**](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. This feature creates a small web server directly on the device and makes it possible to browse its files through a web browser. The Supernote device and your computer must be on the same local network.
 
 ### Steps:
 
@@ -14,11 +14,11 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 2. Setup your Python virtual environment and install with `pip install snbackup`
 
-3. Create a folder on your computer to store your Supernote backups
+3. Create a folder on your computer to store your Supernote note backups
 
-4. **IMPORTANT:** Create a file called `config.json` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network
+4. **IMPORTANT:** Create a file called ``` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example I place my config file in the same directory as my backups.
 
-### Example config.json:
+### Example `:
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
@@ -36,16 +36,16 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 6. There are two ways to run the command from your terminal or command line:
     - `snbackup` 
-        > *This will look for the config.json in your current working directory*
-    - `snbackup -c /full/path/to/config.json`
-        > *This optionally specifies the location of the config.json*  
+        > *This will look for the ` in your current working directory*
+    - `snbackup -c /the/path/to/``
+        > *This optionally specifies the location of the `*  
 
 The first run may take a few minutes depending on how big your notes are and how many you have on the device. The first backup is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups.
 
-You can force a full backup of all notes by running `snbackup -f` or `snbackup --full`
+You can also force a full backup of all notes by running `snbackup -f` or `snbackup --full`
 
-The notes are stored *as is* under your local save directory setup in the config.json file. 
-If a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/Note/Stuff/Ideas.note` or as `C:\Users\devin\Documents\Supernote\Stuff\Ideas.note` on Windows.
+The notes are stored *as is* under your local save directory setup in the `config.json` file. 
+If a note called `Ideas` lives inside a folder called `Stuff` on your Supernote device, it will be stored locally as `/Users/devin/Documents/Supernote/<YYYY-MM-DD>/Note/Stuff/Ideas.note` or translated to `C:\Users\devin\Documents\Supernote\<YYYY-MM-DD>\Note\Stuff\Ideas.note` on Windows.
   
 
 ### Future plans:
