@@ -16,7 +16,7 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 3. Create a folder on your computer to store your Supernote note backups
 
-4. **IMPORTANT:** Create a file called ``` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example I place my config file in the same directory as my backups.
+4. **IMPORTANT:** Create a file called `config.json` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example I place my config file in the same directory as my backups.
 
 ### Example:
 ```
