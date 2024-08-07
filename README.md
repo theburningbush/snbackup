@@ -18,7 +18,7 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 
 4. **IMPORTANT:** Create a file called ``` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example I place my config file in the same directory as my backups.
 
-### Example `:
+### Example:
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
@@ -37,7 +37,7 @@ It works by using the builtin [**Browse & Access**](https://support.supernote.co
 6. There are two ways to run the command from your terminal or command line:
     - `snbackup` 
         > *This will look for the ` in your current working directory*
-    - `snbackup -c /the/path/to/``
+    - `snbackup -c /the/path/to/`
         > *This optionally specifies the location of the `*  
 
 The first run may take a few minutes depending on how big your notes are and how many you have on the device. The first backup is a full backup, but subsequent runs only backup the notes that have been modified since the last backup; this greatly speeds up future backups.
