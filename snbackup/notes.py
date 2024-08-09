@@ -77,7 +77,7 @@ class Note:
     def make_record(self) -> dict:
         return {
             'saved': self.save_date,
-            'location': str(self.base_path),
+            'current_loc': str(self.base_path),
             'uri': self.note_uri,
             'modified': self.last_modified.strftime('%Y-%m-%d %H:%M:%S'),
             'size': self.file_size,

@@ -2,6 +2,7 @@ import os
 import json
 import httpx
 import itertools
+import shutil
 from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser
@@ -20,14 +21,15 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
     logger = my_logger.get_logger()
 
 
-def user_input() -> tuple[Path, bool, bool]:
+def user_input() -> tuple[Path, bool, bool, str, int]:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path of config file')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
-    parser.add_argument('-u', '--url', help="Override device URL found within config.json")
+    parser.add_argument('-u', '--url', help='Override device URL found within config.json')
+    parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x number of backups.')
     args = parser.parse_args()
-    return args.config, args.full, args.inspect, args.url
+    return args.config, args.full, args.inspect, args.url, args.purge
 
 
 def load_config(config_pth: Path) -> dict:
@@ -119,7 +121,7 @@ def previous_record_gen(json_md: Path, *, previous=None):
         previous = previous or []
 
     for record in previous:
-        yield (record.get('location'), record.get('uri'), 
+        yield (record.get('current_loc'), record.get('uri'), 
                 record.get('modified'), record.get('size'))
 
 
@@ -130,9 +132,20 @@ def check_for_deleted(current: set, previous: set) -> list[Note]:
             if note not in current]
 
 
+def purge_old_backups(base_dir: Path, *, num_backups=None, pattern='20??-*') -> None:
+    """Deletes old backups from the backup save directory"""
+    if num_backups:
+        logger.info(f'Purging old backups, keeping last {num_backups}')
+        previous_folders = sorted(base_dir.glob(pattern), reverse=True)
+        while len(previous_folders) > num_backups:
+            old = previous_folders.pop()
+            logger.info(f'Removing backup folder: {old}')
+            shutil.rmtree(old)
+
+
 def backup() -> None:
     """Main workflow logic"""
-    config_file, full_backup, inspect, url_override = user_input()
+    config_file, full_backup, inspect, url_override, purge_old = user_input()
     config = load_config(config_file)
 
     try:
@@ -140,6 +153,8 @@ def backup() -> None:
         device_url = config['device_url']
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config file')
+
+    num_backups = config.get('num_backups')
 
     if url_override:
         # TODO add validation on this so it looks like valid URL
@@ -180,6 +195,7 @@ def backup() -> None:
         logger.info('New/updated notes to be downloaded from device:')
         for note in to_download:
             logger.info(f'Note: {note.note_uri}, Size: {int(note.file_size) / 1000**2:.2f} MB')
+        logger.info('Inspection complete')
         raise SystemExit()
 
     logger.info(f'Downloading {len(to_download)} new notes from device.')
@@ -193,8 +209,14 @@ def backup() -> None:
         local_note = current_note.full_path.read_bytes()
         save_to_pth = today.joinpath(current_note.note_uri)
         save_note(save_to_pth, local_note)
+        current_note.base_path = today
 
     records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
     save_records(records, json_md_file)
+
+    if purge_old:
+        num_backups = abs(purge_old)
+
+    purge_old_backups(save_dir, num_backups=num_backups)
 
     logger.info('Backup complete')
