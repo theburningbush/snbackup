@@ -23,11 +23,11 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
 
 def user_input() -> tuple[Path, bool, bool, str, int]:
     parser = ArgumentParser()
-    parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path of config file')
+    parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path to config')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
     parser.add_argument('-u', '--url', help='Override device URL found within config.json')
-    parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x number of backups.')
+    parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x backups.')
     args = parser.parse_args()
     return args.config, args.full, args.inspect, args.url, args.purge
 
@@ -69,7 +69,7 @@ def parse_html(html_text: str) -> list[dict] | None:
             logger.error(e)
             parsed_dict = {}
         return parsed_dict.get('fileList')
-    
+
 
 def device_uri_gen(url, note_details: list[dict]):
     for note in note_details:
@@ -88,9 +88,9 @@ def today_pth(save_dir: str) -> Path:
 
 
 def save_note(local_pth: Path, note: bytes) -> None:
-    """Makes parent directory then writes 
-        note bytes to local disk"""
-    
+    """Makes parent directory then writes
+    note bytes to local disk"""
+
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
@@ -107,8 +107,8 @@ def save_records(note_records: list[dict], json_md: Path) -> None:
 
 def previous_record_gen(json_md: Path, *, previous=None):
     """Retreives last backup metadata from json and
-        yields back relevant info to serialize Note objects"""
-    
+    yields back relevant info to serialize Note objects"""
+
     try:
         with open(json_md) as json_in:
             previous = json.loads(json_in.read())
@@ -122,14 +122,13 @@ def previous_record_gen(json_md: Path, *, previous=None):
 
     for record in previous:
         yield (record.get('current_loc'), record.get('uri'), 
-                record.get('modified'), record.get('size'))
+               record.get('modified'), record.get('size'))
 
 
 def check_for_deleted(current: set, previous: set) -> list[Note]:
     """Looks for notes no longer on device from last backup"""
     symmetric = current.symmetric_difference(previous)
-    return [note for note in symmetric
-            if note not in current]
+    return [note for note in symmetric if note not in current]
 
 
 def purge_old_backups(base_dir: Path, *, num_backups=None, pattern='20??-*') -> None:
@@ -175,17 +174,17 @@ def backup() -> None:
     todays_notes = {Note(today, uri, mdate, size) 
                     for uri, mdate, size 
                     in device_uri_gen(device_url, device_note_info)}
-    
-    previous_notes = {Note(Path(loc), uri, mod, fsize)
+
+    previous_notes = {Note(Path(loc), uri, mod, fsize) 
                       for loc, uri, mod, fsize 
                       in previous_record_gen(json_md_file)}
-    
+
     for deleted_note in check_for_deleted(todays_notes, previous_notes):
         previous_notes.discard(deleted_note)
 
     if full_backup:
         previous_notes = set()
-    
+
     to_download = todays_notes.difference(previous_notes)
 
     unchanged = todays_notes.intersection(previous_notes)
@@ -201,7 +200,7 @@ def backup() -> None:
     logger.info(f'Downloading {len(to_download)} new notes from device.')
     for new_note in to_download:
         download_response = get_from_device(device_url, new_note.note_uri)
-        new_note.file_bytes = download_response.read()  
+        new_note.file_bytes = download_response.read()
         save_note(new_note.full_path, new_note.file_bytes)
 
     logger.info(f'Merging {len(unchanged)} unchanged notes from local disk')

@@ -15,6 +15,7 @@ class BadDateError(Exception):
 @total_ordering
 class Note:
     """Represent an individual Supernote note"""
+
     def __init__(self, base_path: Path, note_uri: str, last_modified: str, file_size: int) -> None:
         self.base_path = base_path
         self.note_uri = note_uri
@@ -45,11 +46,11 @@ class Note:
         if self.file_bytes == b'':
             raise BytesEmptyError(f'File is empty: {self.file_bytes!r}')
         return sha256(self.file_bytes).hexdigest()
-    
+
     @property
     def last_modified(self) -> datetime:
         return self._last_modified
-    
+
     @last_modified.setter
     def last_modified(self, mod_date: str) -> None:
         try:
@@ -62,18 +63,18 @@ class Note:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return (self.last_modified, self.file_size) == (other.last_modified, other.file_size)
-    
+
     def __lt__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return (self.last_modified, self.file_size) < (other.last_modified, other.file_size)
-    
+
     def __hash__(self) -> int:
         return hash((self.note_uri, self.last_modified, self.file_size))
-    
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.base_path!r}, {self.note_uri!r}, '{self.last_modified}', {self.file_size})"
-    
+
     def make_record(self) -> dict:
         return {
             'saved': self.save_date,
@@ -82,4 +83,3 @@ class Note:
             'modified': self.last_modified.strftime('%Y-%m-%d %H:%M:%S'),
             'size': self.file_size,
         }
-    
