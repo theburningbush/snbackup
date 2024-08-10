@@ -1,10 +1,10 @@
 ## Simple utility to backup notes from a Supernote device over WiFi
 
-I created this cli tool to backup notes from my Supernote Nomad (A6 X2) over WiFi. No accounts, mobile apps, or third party cloud service providers are necessary. It will *probably* work on any of the Supernote devices running the most up-to-date software.
+I created this cli tool to backup notes from my Supernote Nomad (A6 X2) over WiFi. No user accounts, mobile apps, or third party cloud service providers are necessary. It will *probably* work on any of the Supernote devices running the most up-to-date software.
 
 Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)
 
-The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a `.note` extension) exactly as they are found on the device. If you are interested in converting your notes to PDF or PNG after downloading, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
+The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a `.note` extension) exactly as found on the device. If you are interested in converting your notes to PDF or PNG after downloading, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
 
 It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. This feature creates a small web server directly on the device and makes it possible to browse its files through a web browser. The Supernote device and your computer must be on the same local network.
 
