@@ -121,7 +121,7 @@ def previous_record_gen(json_md: Path, *, previous=None):
         previous = previous or []
 
     for record in previous:
-        yield (record.get('current_loc', record.get('location')), record.get('uri'), 
+        yield (record.get('current_loc'), record.get('uri'), 
                 record.get('modified'), record.get('size'))
 
 
