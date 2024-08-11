@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import httpx
 import itertools
@@ -59,16 +60,20 @@ def get_from_device(base_url: str, uri: str) -> httpx.Response | None:
         return response
 
 
-def parse_html(html_text: str) -> list[dict] | None:
-    if 'const json =' in html_text:
-        # TODO: use regex
-        parsed_json = html_text.split('const json = ')[1].split("console.log('json=' + json")[0].strip().strip("'")
-        try:
-            parsed_dict = json.loads(parsed_json)
-        except json.JSONDecodeError as e:
-            logger.error(e)
-            parsed_dict = {}
-        return parsed_dict.get('fileList')
+def parse_html(html_text: str) -> list[dict] | list:
+    try:
+        re_match = re.search(r"const json = '({.*?})'", html_text)
+        parsed = re_match.group(1)
+    except AttributeError as e:
+        logger.error(f'Unable to extract necessary metadata from html. Aborting: {e}')
+        raise SystemExit()
+
+    try:
+        parsed_dict = json.loads(parsed)
+    except json.JSONDecodeError as e:
+        logger.error(e)
+        parsed_dict = {}
+    return parsed_dict.get('fileList', [])
 
 
 def device_uri_gen(url, note_details: list[dict]):
@@ -156,7 +161,7 @@ def backup() -> None:
     num_backups = config.get('num_backups')
 
     if url_override:
-        # TODO add validation on this so it looks like valid URL
+        # TODO add validation for this url string
         device_url = url_override
 
     save_dir = Path(save_dir)
@@ -191,9 +196,9 @@ def backup() -> None:
 
     if inspect:
         logger.info('Inspecting changes only...')
-        logger.info('New/updated notes to be downloaded from device:')
+        logger.info('New or updated notes to be downloaded from device:')
         for note in to_download:
-            logger.info(f'Note: {note.note_uri}, Size: {int(note.file_size) / 1000**2:.2f} MB')
+            logger.info(f'{note.note_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
         logger.info('Inspection complete')
         raise SystemExit()
 
@@ -210,8 +215,9 @@ def backup() -> None:
         save_note(save_to_pth, local_note)
         current_note.base_path = today
 
-    records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
-    save_records(records, json_md_file)
+    if to_download or unchanged:
+        records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
+        save_records(records, json_md_file)
 
     if purge_old:
         num_backups = abs(purge_old)
