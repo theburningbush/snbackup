@@ -65,7 +65,7 @@ def parse_html(html_text: str) -> list[dict] | list:
         re_match = re.search(r"const json = '({.*?})'", html_text)
         parsed = re_match.group(1)
     except AttributeError as e:
-        logger.error(f'Unable to extract necessary metadata from html. Aborting: {e}')
+        logger.error(f'Unable to extract necessary metadata from device response. Aborting: {e}')
         raise SystemExit()
 
     try:

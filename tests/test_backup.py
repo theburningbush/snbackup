@@ -1,6 +1,7 @@
 from snbackup import backup
 from tempfile import NamedTemporaryFile
 from pathlib import Path
+import textwrap
 import json
 
 import pytest
@@ -64,7 +65,47 @@ def metadata() -> list[dict]:
     ]
 
 
-def test_previous_record_gen(metadata: list[dict]):
+@pytest.fixture
+def html_text() -> str:
+    return textwrap.dedent("""            
+                <div id="table-item" class="table-item" style="width:100%;height: 100%;overflow: auto">
+                    <table class="table item">
+                        <colgroup>
+                            <col style="width: 60%">
+                            <col style="width: 20%">
+                            <col style="width: 20%">
+                        </colgroup>
+                        <!--                <tbody> 标签用于组合 HTML 表格的主体内容。-->
+                        <tbody id="item-container" style="width:100%;height: 100%;">
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    </body>
+
+
+    <script>
+
+        const json = '{"availableMemory":23330586624,"deviceName":"Supernote","fileList":[{"date":"2024-07-17 21:19","extension":"","isDirectory":true,"name":"Work","size":0,"uri":"/Note/Work"},{"date":"2024-07-13 22:17","extension":"","isDirectory":true,"name":"Study","size":0,"uri":"/Note/Study"},{"date":"2024-07-12 08:19","extension":"","isDirectory":true,"name":"Misc","size":0,"uri":"/Note/Misc"},{"date":"2024-07-11 10:31","extension":"note","isDirectory":false,"name":"Today.note","size":8675309,"uri":"/Note/Today.note"},{"date":"2024-06-27 16:32","extension":"note","isDirectory":false,"name":"Tomorrow.note","size":27926564,"uri":"/Note/Tomorrow.note"},{"date":"2024-07-19 08:25","extension":"note","isDirectory":false,"name":"Yesterday.note","size":12221169,"uri":"/Note/Yesterday.note"},{"date":"2024-05-23 08:21","extension":"note","isDirectory":false,"name":"Stuff.note","size":4726881,"uri":"/Note/Stuff.note"},{"date":"2024-06-09 05:53","extension":"note","isDirectory":false,"name":"ABC123.note","size":786656,"uri":"/Note/ABC123.note"}],"routeList":[{"name":"Supernote","path":"/"},{"name":"Note","path":"/Note"}],"totalMemory":32.0}'
+        console.log('json=' + json)
+        const webInfo = JSON.parse(json)
+
+        document.title = webInfo.deviceName
+        document.getElementById('title').innerText = webInfo.deviceName
+        setAvailableMemory(webInfo.availableMemory)
+
+        const itemContainerDocument = document.getElementById('item-container')
+        const mainElement = document.getElementById('main');
+                           
+    """)
+
+
+def test_previous_record_gen(metadata):
     # TODO look at the builtin mktemp for pytest instead of rolling your own you heathen
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb') as temp:
         temp.write(json.dumps(metadata))
@@ -82,3 +123,73 @@ def test_previous_record_gen(metadata: list[dict]):
     # Moved out of context so this file is now gone. Hence file not found test
     not_found_error = backup.previous_record_gen(pth)
     assert list(not_found_error) == []
+
+
+def test_parse_html(html_text):
+    response = [
+        {
+            'date': '2024-07-17 21:19',
+            'extension': '',
+            'isDirectory': True,
+            'name': 'Work',
+            'size': 0,
+            'uri': '/Note/Work',
+        },
+        {
+            'date': '2024-07-13 22:17',
+            'extension': '',
+            'isDirectory': True,
+            'name': 'Study',
+            'size': 0,
+            'uri': '/Note/Study',
+        },
+        {
+            'date': '2024-07-12 08:19',
+            'extension': '',
+            'isDirectory': True,
+            'name': 'Misc',
+            'size': 0,
+            'uri': '/Note/Misc',
+        },
+        {
+            'date': '2024-07-11 10:31',
+            'extension': 'note',
+            'isDirectory': False,
+            'name': 'Today.note',
+            'size': 8675309,
+            'uri': '/Note/Today.note',
+        },
+        {
+            'date': '2024-06-27 16:32',
+            'extension': 'note',
+            'isDirectory': False,
+            'name': 'Tomorrow.note',
+            'size': 27926564,
+            'uri': '/Note/Tomorrow.note',
+        },
+        {
+            'date': '2024-07-19 08:25',
+            'extension': 'note',
+            'isDirectory': False,
+            'name': 'Yesterday.note',
+            'size': 12221169,
+            'uri': '/Note/Yesterday.note',
+        },
+        {
+            'date': '2024-05-23 08:21',
+            'extension': 'note',
+            'isDirectory': False,
+            'name': 'Stuff.note',
+            'size': 4726881,
+            'uri': '/Note/Stuff.note',
+        },
+        {
+            'date': '2024-06-09 05:53',
+            'extension': 'note',
+            'isDirectory': False,
+            'name': 'ABC123.note',
+            'size': 786656,
+            'uri': '/Note/ABC123.note',
+        },
+    ]
+    assert backup.parse_html(html_text) == response
