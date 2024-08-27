@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import httpx
@@ -24,7 +23,7 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
 
 def user_input() -> tuple[Path, bool, bool, str, int]:
     parser = ArgumentParser()
-    parser.add_argument('-c', '--config', type=Path, default=Path(f'{os.getcwd()}/config.json'), help='Full path to config')
+    parser.add_argument('-c', '--config', type=Path, default=Path().cwd().joinpath('config.json'), help='Full path to config')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
     parser.add_argument('-u', '--url', help='Override device URL found within config.json')
