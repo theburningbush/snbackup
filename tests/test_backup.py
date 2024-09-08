@@ -4,7 +4,6 @@ from pathlib import Path
 import textwrap
 import json
 import sys
-import io
 
 from snbackup.notes import Note
 
