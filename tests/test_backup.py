@@ -3,6 +3,10 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 import textwrap
 import json
+import sys
+import io
+
+from snbackup.notes import Note
 
 import pytest
 
@@ -107,7 +111,7 @@ def html_text() -> str:
 
 def test_previous_record_gen(metadata):
     # TODO look at the builtin mktemp for pytest instead of rolling your own you heathen
-    with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb') as temp:
+    with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
         temp.write(json.dumps(metadata))
         temp.seek(0)  # Reset back to beginning of file after write
         pth = Path(temp.name)
@@ -116,8 +120,8 @@ def test_previous_record_gen(metadata):
         ]
         assert list(backup.previous_record_gen(pth)) == data_lst
 
-        temp.write('*JUNK*/^Line[{{***')  # Write in bad text so json can't deserialize
-        temp.flush()
+        temp.write('*JUNK*/^Line[{{***')  # Write in bad text overtop json so it can't deserialize properly
+        temp.flush()  # Force the write
         assert list(backup.previous_record_gen(pth)) == []
 
     # Moved out of context so this file is now gone. Hence file not found test
@@ -193,3 +197,35 @@ def test_parse_html(html_text):
         },
     ]
     assert backup.parse_html(html_text) == response
+
+
+def test_check_for_deleted():
+    set_1 = {Note(Path('/test/path/2024-08-01'), f'uri/fake_{n}.note', '2024-07-04 13:45:01', 404040) for n in range(5)}
+    set_2 = {Note(Path('/test/path/2024-08-01'), f'uri/fake_{n}.note', '2024-07-04 13:45:01', 404040) for n in range(5)}
+
+    set_1.add(Note(Path('/test/path/2024-08-01'), 'uri/only_set_1.note', '2024-07-04 13:45:01', 404040))
+
+    one = Note(Path('/test/path/2024-08-01'), 'uri/only_set_2_one.note', '2024-07-04 13:45:01', 404040)
+    two = Note(Path('/test/path/2024-08-01'), 'uri/only_set_2_two.note', '2024-07-04 13:45:01', 404040)
+    set_2.add(one)
+    set_2.add(two)
+    
+    assert backup.check_for_deleted(set_1, set_2) == [one, two]
+
+
+def test_user_input():
+    # Running this one last since I'm altering sys.argv. Doesn't seem to impact anything else but just in case - could also make context manager
+    # Passing in all currently available cli flags
+    sys.argv[1:] = ['-c', 'path/to/test_config.json', '-f', '-i', '-u', 'http://192.168.1.100:8089', '-p', '5']
+    assert backup.user_input() == (Path('path/to/test_config.json'), True, True, 'http://192.168.1.100:8089', 5)
+    sys.argv = ['']  # Pretending we're calling command with no additional cli flags
+    assert backup.user_input() == (Path().cwd().joinpath('config.json'), False, False, None, None)
+
+
+def test_load_config():
+    config_dict = {'save_dir': '/Users/devin/Documents/Supernote', 'device_url': 'http://192.168.1.105:8089/'}
+    with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
+        temp.write(json.dumps(config_dict))
+        temp.seek(0)
+        pth = Path(temp.name)
+        assert backup.load_config(pth) == config_dict

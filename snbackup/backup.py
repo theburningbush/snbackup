@@ -21,7 +21,7 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
     logger = my_logger.get_logger()
 
 
-def user_input() -> tuple[Path, bool, bool, str, int]:
+def user_input() -> tuple[Path, bool, bool, str | None, int]:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path().cwd().joinpath('config.json'), help='Full path to config')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
