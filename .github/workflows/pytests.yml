@@ -9,7 +9,8 @@ jobs:
     name: Test Python
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix: [ubuntu-latest, macos-latest, windows-latest]  
+      matrix: 
+        os: [ubuntu-latest, macos-latest, windows-latest]  
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
