@@ -146,6 +146,18 @@ def purge_old_backups(base_dir: Path, *, num_backups=None, pattern='20??-*') -> 
             shutil.rmtree(old)
 
 
+def run_inspection(to_download: set) -> None:
+    """Inspect current notes, determine what's new or changed, and log that out"""
+    logger.info('Inspecting changes only...')
+    if len(to_download) > 0:
+        logger.info('New or updated notes to be downloaded from device:')
+    else:
+        logger.info('No new or updated notes found on device')
+    for note in to_download:
+        logger.info(f'{note.note_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
+    logger.info('Inspection complete')
+
+
 def backup() -> None:
     """Main workflow logic"""
     config_file, full_backup, inspect, url_override, purge_old = user_input()
@@ -194,12 +206,8 @@ def backup() -> None:
     unchanged = todays_notes.intersection(previous_notes)
 
     if inspect:
-        logger.info('Inspecting changes only...')
-        logger.info('New or updated notes to be downloaded from device:')
-        for note in to_download:
-            logger.info(f'{note.note_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
-        logger.info('Inspection complete')
-        raise SystemExit()
+        run_inspection(to_download)
+        raise SystemExit()  # Quit after inspecting
 
     logger.info(f'Downloading {len(to_download)} new notes from device.')
     for new_note in to_download:
