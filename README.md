@@ -16,7 +16,7 @@ It works by using the builtin [Browse & Access](https://support.supernote.com/en
 
 3. Create a folder on your computer to store your Supernote note backups
 
-4. **IMPORTANT:** Create a file called `config.json` or edit the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups.
+4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups and run the program from there.
 
 ### Example config.json:
 ```
@@ -28,24 +28,24 @@ It works by using the builtin [Browse & Access](https://support.supernote.com/en
 
 > All note backups, metadata files, and logs are located under the **save_dir** directory.  
 
-> It should work the same for Mac, Linux, or Windows machines. _Use forward slashes just like in the example config above even on Windows._
+> It should work the same for Mac, Linux, or **Windows** machines. _Use forward slashes just like in the example config above even on **Windows** -_ `C:/Users/devin/Documents/Supernote`. Technically, the **_C:_** is optional here but you can include it if you like or if you wish to specify a different disk.
 
-> The **device_url** needed will be displayed on the Supernote when Browse & Access is enabled. Use that URL from your device here.
+> The **device_url** needed will be displayed on the Supernote when Browse & Access is enabled. Use that URL from your device here.  
 
-5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on
+5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on  
 
 6. There are two main ways to run the command from your terminal or command line:
-    - This will look for config.json in your current working directory  
+    - This will look for the required **config.json** in your current working directory  
     `snbackup` 
 
-    - This optionally specifies the location of the config.json file  
+    - This optionally specifies the location of the required **config.json** file  
     `snbackup -c /the/path/to/config.json`  
 
 The first run may take a few minutes or more as it will attempt to download all notes. Subsequent runs only download new or modified notes; this greatly speeds up future backups.
 
 You can always force a full backup of all notes by running `snbackup -f` or `snbackup --full`
 
-The notes are stored *as is* under your local save directory setup in the `config.json` file.  
+The notes are stored *as is* under your local save directory defined in the `config.json` file.  
 
 > If a note called `Ideas` is found under a folder called `Stuff` on your Supernote device, it will be backed up locally as `/Users/devin/Documents/Supernote/<YYYY-MM-DD>/Note/Stuff/Ideas.note`  
 
@@ -60,7 +60,7 @@ The notes are stored *as is* under your local save directory setup in the `confi
 - Inspect new notes to be downloaded from device and quit without downloading  
 `snbackup -i`
 
-- **EXPERIMENTAL:** Purge old backups from your local **save_dir** directory and keeps only the number requested here. In this example, all but the 5 most recent backups are removed.   
+- **EXPERIMENTAL:** Purge (delete) old backups from your local **save_dir** directory and keeps only the number requested here. In this example, all but the 5 most recent backups are removed.   
 `snbackup -p 5`
 
 - **EXPERIMENTAL:** You can optionally add **num_backups** to your `config.json` file to have it automatically remove old backups from your backup directory without needing to specify using the `-p` flag. **Be advised, this deletes your old backups! Handle with care.**  
@@ -71,9 +71,3 @@ The notes are stored *as is* under your local save directory setup in the `confi
     "num_backups": 3
 }
 ```
-
-### Future plans:
-- Add a first time setup option to build config.json file
-- Persist note metadata in sqlite instead of json file
-- Add note validation option to ensure local and remote notes are identical
-- A restore device feature to bulk move local backups back to device

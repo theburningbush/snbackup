@@ -38,7 +38,7 @@ def load_config(config_pth: Path) -> dict:
         with open(config_pth) as config_in:
             return json.load(config_in)
     except FileNotFoundError:
-        raise SystemExit(f'JSON config file not found at {config_pth!s}.')
+        raise SystemExit(f'Required JSON config file not found at {config_pth!s}.')
     except json.JSONDecodeError:
         raise SystemExit(f'JSON file malformed or invalid. Check your config at {config_pth!s}')
 
@@ -167,7 +167,7 @@ def backup() -> None:
         save_dir = config['save_dir']
         device_url = config['device_url']
     except KeyError:
-        raise SystemExit('Unable to find "save_dir" or "device_url" in config file')
+        raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
     num_backups = config.get('num_backups')
 
@@ -207,7 +207,7 @@ def backup() -> None:
 
     if inspect:
         run_inspection(to_download)
-        raise SystemExit()  # Quit after inspecting
+        raise SystemExit()
 
     logger.info(f'Downloading {len(to_download)} new notes from device.')
     for new_note in to_download:
