@@ -28,8 +28,9 @@ def user_input() -> tuple[Path, bool, bool, str | None, int]:
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
     parser.add_argument('-u', '--url', help='Override device URL found within config.json')
     parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x backups.')
+    parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
     args = parser.parse_args()
-    return args.config, args.full, args.inspect, args.url, args.purge
+    return args.config, args.full, args.inspect, args.url, args.purge, args.version
 
 
 def load_config(config_pth: Path) -> dict:
@@ -160,7 +161,12 @@ def run_inspection(to_download: set) -> None:
 
 def backup() -> None:
     """Main workflow logic"""
-    config_file, full_backup, inspect, url_override, purge_old = user_input()
+    config_file, full_backup, inspect, url_override, purge_old, prog_version = user_input()
+
+    if prog_version:
+        from importlib.metadata import version
+        raise SystemExit(f'snbackup v{version('snbackup')}')
+    
     config = load_config(config_file)
 
     try:
