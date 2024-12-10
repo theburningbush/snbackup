@@ -199,17 +199,20 @@ def test_parse_html(html_text):
 
 
 def test_check_for_deleted():
-    set_1 = {Note(Path('/test/path/2024-08-01'), f'uri/fake_{n}.note', '2024-07-04 13:45:01', 404040) for n in range(5)}
-    set_2 = {Note(Path('/test/path/2024-08-01'), f'uri/fake_{n}.note', '2024-07-04 13:45:01', 404040) for n in range(5)}
+    # Common notes 
+    cur_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    pre_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
 
-    set_1.add(Note(Path('/test/path/2024-08-01'), 'uri/only_set_1.note', '2024-07-04 13:45:01', 404040))
+    # New note created on device since last backup
+    cur_notes.add(Note(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
 
-    one = Note(Path('/test/path/2024-08-01'), 'uri/only_set_2_one.note', '2024-07-04 13:45:01', 404040)
-    two = Note(Path('/test/path/2024-08-01'), 'uri/only_set_2_two.note', '2024-07-04 13:45:01', 404040)
-    set_2.add(one)
-    set_2.add(two)
+    # Two notes only found in previous, deleted from device since last backup
+    previous_1 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
+    previous_2 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
+    pre_notes.add(previous_1)
+    pre_notes.add(previous_2)
     
-    assert backup.check_for_deleted(set_1, set_2) == [one, two]
+    assert backup.check_for_deleted(cur_notes, pre_notes) == [previous_1, previous_2]
 
 
 def test_user_input():
