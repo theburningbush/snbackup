@@ -22,6 +22,8 @@ class CustomLogger:
     """Used to setup a "standard" logger that allows for
     logging to file as well as to console if desired"""
 
+    log_files = []
+
     def __init__(self, level: str) -> None:
         self.level = level
         self.format = logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
@@ -41,11 +43,22 @@ class CustomLogger:
             fname = fname.removesuffix('.py')
 
         self.file = logging.FileHandler(f'{fname}.log', encoding='utf-8')
+        CustomLogger.log_files.append(self.file.baseFilename)
         self.file.setFormatter(self.format)
         self.logger.addHandler(self.file)
 
-    def get_logger(self) -> logging.Logger:
-        return self.logger
-
     def __repr__(self) -> str:
         return f'{type(self).__name__}({self.level})'
+
+    def truncate_log(self, num_lines: int) -> None:
+        """Limits the log file set in to_file call 
+        to only grow to num_lines number of lines."""
+
+        if self.base_file_names:
+            with open(self.file.baseFilename, 'rt') as log_in:
+                lines = log_in.readlines()
+
+            if len(lines) > num_lines:
+                with open(self.file.baseFilename, 'wt') as log_out:
+                    log_out.writelines(lines[-num_lines:])
+

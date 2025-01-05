@@ -5,23 +5,26 @@ import itertools
 import shutil
 from pathlib import Path
 from datetime import date
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 from .notes import Note
 from .utilities import CustomLogger
 
 
+FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
+
+
 def create_logger(log_file_name: str, *, running_tests=False) -> None:
     """Sets up a global logger to be used throughout the program"""
     global logger
-    my_logger = CustomLogger('INFO')
+    custom = CustomLogger('INFO')
     if not running_tests:
-        my_logger.to_file(log_file_name)
-    my_logger.to_console()
-    logger = my_logger.get_logger()
+        custom.to_file(log_file_name)
+    custom.to_console()
+    logger = custom.logger
 
 
-def user_input() -> tuple[Path, bool, bool, str | None, int]:
+def user_input() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path().cwd().joinpath('config.json'), help='Full path to config')
     parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
@@ -29,8 +32,7 @@ def user_input() -> tuple[Path, bool, bool, str | None, int]:
     parser.add_argument('-u', '--url', help='Override device URL found within config.json')
     parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x backups.')
     parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
-    args = parser.parse_args()
-    return args.config, args.full, args.inspect, args.url, args.purge, args.version
+    return parser.parse_args()
 
 
 def load_config(config_pth: Path) -> dict:
@@ -159,15 +161,23 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
+def purge_log() -> None:
+    ...
+
+
 def backup() -> None:
     """Main workflow logic"""
-    config_file, full_backup, inspect, url_override, purge_old, prog_version = user_input()
+    # args.config, args.full, args.inspect, args.url, args.purge, args.version
+    # config_file, full_backup, inspect, url_override, purge_old, prog_version = user_input()
 
-    if prog_version:
+    args = user_input()
+    print(args)
+
+    if args.version:
         from importlib.metadata import version
         raise SystemExit(f'snbackup v{version('snbackup')}')
     
-    config = load_config(config_file)
+    config = load_config(args.config)
 
     try:
         save_dir = config['save_dir']
@@ -176,10 +186,11 @@ def backup() -> None:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
     num_backups = config.get('num_backups')
+    truncate_log = config.get('truncate_log')
 
-    if url_override:
+    if args.url:
         # TODO add validation for this url string
-        device_url = url_override
+        device_url = args.url
 
     save_dir = Path(save_dir)
     json_md_file = Path(save_dir.joinpath('metadata.json'))
@@ -204,14 +215,14 @@ def backup() -> None:
     for deleted_note in check_for_deleted(todays_notes, previous_notes):
         previous_notes.discard(deleted_note)
 
-    if full_backup:
+    if args.full:
         previous_notes = set()
 
     to_download = todays_notes.difference(previous_notes)
 
     unchanged = todays_notes.intersection(previous_notes)
 
-    if inspect:
+    if args.inspect:
         run_inspection(to_download)
         raise SystemExit()
 
@@ -232,9 +243,13 @@ def backup() -> None:
         records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
         save_records(records, json_md_file)
 
-    if purge_old:
-        num_backups = abs(purge_old)
+    if args.purge:
+        num_backups = abs(args.purge)
 
     purge_old_backups(save_dir, num_backups=num_backups)
 
     logger.info('Backup complete')
+
+    if truncate_log:
+        print(f'Log file size {truncate_log} lines')
+        CustomLogger.truncate_log(num_lines=truncate_log)
