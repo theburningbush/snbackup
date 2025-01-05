@@ -219,9 +219,11 @@ def test_user_input():
     # Running this one last since I'm altering sys.argv. Doesn't seem to impact anything else but just in case - could also make context manager
     # Passing in all currently available cli flags
     sys.argv[1:] = ['-c', 'path/to/test_config.json', '-f', '-i', '-u', 'http://192.168.1.100:8089', '-p', '5', '-v']
-    assert backup.user_input() == (Path('path/to/test_config.json'), True, True, 'http://192.168.1.100:8089', 5, True)
+    ns = backup.user_input()  # Namespace
+    assert (ns.config, ns.full, ns.inspect, ns.url, ns.purge, ns.version) == (Path('path/to/test_config.json'), True, True, 'http://192.168.1.100:8089', 5, True)
     sys.argv = ['']  # Pretending we're calling command with no additional cli flags
-    assert backup.user_input() == (Path().cwd().joinpath('config.json'), False, False, None, None, False)
+    ns = backup.user_input()
+    assert (ns.config, ns.full, ns.inspect, ns.url, ns.purge, ns.version) == (Path().cwd().joinpath('config.json'), False, False, None, None, False)
 
 
 def test_load_config():
