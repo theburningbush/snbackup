@@ -47,18 +47,18 @@ class CustomLogger:
         self.file.setFormatter(self.format)
         self.logger.addHandler(self.file)
 
-    def __repr__(self) -> str:
-        return f'{type(self).__name__}({self.level})'
-
     def truncate_log(self, num_lines: int) -> None:
         """Limits the log file set in to_file call 
         to only grow to num_lines number of lines."""
 
-        if self.base_file_names:
+        if CustomLogger.log_files:
             with open(self.file.baseFilename, 'rt') as log_in:
                 lines = log_in.readlines()
 
             if len(lines) > num_lines:
                 with open(self.file.baseFilename, 'wt') as log_out:
                     log_out.writelines(lines[-num_lines:])
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}({self.level})'
 

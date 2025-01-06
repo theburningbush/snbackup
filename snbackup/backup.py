@@ -14,7 +14,7 @@ from .utilities import CustomLogger
 FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
 
 
-def create_logger(log_file_name: str, *, running_tests=False) -> None:
+def create_logger(log_file_name: str, *, running_tests=False) -> CustomLogger:
     """Sets up a global logger to be used throughout the program"""
     global logger
     custom = CustomLogger('INFO')
@@ -22,6 +22,7 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
         custom.to_file(log_file_name)
     custom.to_console()
     logger = custom.logger
+    return custom
 
 
 def user_input() -> Namespace:
@@ -161,17 +162,10 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
-def purge_log() -> None:
-    ...
-
-
 def backup() -> None:
     """Main workflow logic"""
-    # args.config, args.full, args.inspect, args.url, args.purge, args.version
-    # config_file, full_backup, inspect, url_override, purge_old, prog_version = user_input()
-
+    
     args = user_input()
-    print(args)
 
     if args.version:
         from importlib.metadata import version
@@ -186,7 +180,7 @@ def backup() -> None:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
     num_backups = config.get('num_backups')
-    truncate_log = config.get('truncate_log')
+    truncate = config.get('truncate_log', 2000)
 
     if args.url:
         # TODO add validation for this url string
@@ -195,7 +189,7 @@ def backup() -> None:
     save_dir = Path(save_dir)
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
-    create_logger(str(save_dir.joinpath('snbackup')))
+    custom_logger = create_logger(str(save_dir.joinpath('snbackup')))
     logger.info(f'Device at {device_url}')
     logger.info(f'Saving to {save_dir.absolute()}')
 
@@ -250,6 +244,9 @@ def backup() -> None:
 
     logger.info('Backup complete')
 
-    if truncate_log:
-        print(f'Log file size {truncate_log} lines')
-        CustomLogger.truncate_log(num_lines=truncate_log)
+    try:
+        truncate = int(truncate)
+    except (ValueError, TypeError):
+        raise SystemExit()
+    print(f'Log file truncated to last {truncate} lines')
+    custom_logger.truncate_log(truncate)
