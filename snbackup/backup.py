@@ -14,7 +14,7 @@ from .utilities import CustomLogger
 FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
 
 
-def create_logger(log_file_name: str, *, running_tests=False) -> CustomLogger:
+def create_logger(log_file_name: str, *, running_tests=False) -> None:
     """Sets up a global logger to be used throughout the program"""
     global logger
     custom = CustomLogger('INFO')
@@ -22,7 +22,6 @@ def create_logger(log_file_name: str, *, running_tests=False) -> CustomLogger:
         custom.to_file(log_file_name)
     custom.to_console()
     logger = custom.logger
-    return custom
 
 
 def user_input() -> Namespace:
@@ -162,6 +161,19 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
+def truncate_log(lines: int, minimum=100) -> None:
+    """Truncates log to whatever value is read in or at least keeps last 100 lines."""
+    try:
+        lines = int(lines)
+    except (ValueError, TypeError):
+        raise SystemExit('Warning: "truncate_log" config option should be an integer')
+    else:
+        lines = minimum if lines < minimum else lines
+
+    print(f'Truncating log file to last {lines} lines')
+    CustomLogger.truncate_logs(lines)
+
+
 def backup() -> None:
     """Main workflow logic"""
     
@@ -180,7 +192,7 @@ def backup() -> None:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
     num_backups = config.get('num_backups')
-    truncate = config.get('truncate_log', 2000)
+    truncate = config.get('truncate_log', 1000)
 
     if args.url:
         # TODO add validation for this url string
@@ -189,7 +201,7 @@ def backup() -> None:
     save_dir = Path(save_dir)
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
-    custom_logger = create_logger(str(save_dir.joinpath('snbackup')))
+    create_logger(str(save_dir.joinpath('snbackup')))
     logger.info(f'Device at {device_url}')
     logger.info(f'Saving to {save_dir.absolute()}')
 
@@ -244,9 +256,4 @@ def backup() -> None:
 
     logger.info('Backup complete')
 
-    try:
-        truncate = int(truncate)
-    except (ValueError, TypeError):
-        raise SystemExit()
-    print(f'Log file truncated to last {truncate} lines')
-    custom_logger.truncate_log(truncate)
+    truncate_log(truncate)
