@@ -160,7 +160,7 @@ def run_inspection(to_download: set) -> None:
     else:
         logger.info('No new or updated files found on device')
     for note in to_download:
-        logger.info(f'{note.note_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
+        logger.info(f'{note.file_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
     logger.info('Inspection complete')
 
 
@@ -241,14 +241,14 @@ def backup() -> None:
 
     logger.info(f'Downloading {len(to_download)} files from device.')
     for new_note in to_download:
-        download_response = get_from_device(device_url, new_note.note_uri)
+        download_response = get_from_device(device_url, new_note.file_uri)
         new_note.file_bytes = download_response.read()
         save_note(new_note.full_path, new_note.file_bytes)
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
     for current_note in unchanged:
         local_note = current_note.full_path.read_bytes()
-        save_to_pth = today.joinpath(current_note.note_uri)
+        save_to_pth = today.joinpath(current_note.file_uri)
         save_note(save_to_pth, local_note)
         current_note.base_path = today
 
