@@ -5,7 +5,7 @@ import textwrap
 import json
 import sys
 
-from snbackup.notes import Note
+from snbackup.files import SnFiles
 
 import pytest
 
@@ -200,15 +200,15 @@ def test_parse_html(html_text):
 
 def test_check_for_deleted():
     # Common notes 
-    cur_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
-    pre_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    cur_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    pre_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
 
     # New note created on device since last backup
-    cur_notes.add(Note(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
+    cur_notes.add(SnFiles(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
 
     # Two notes only found in previous, deleted from device since last backup
-    previous_1 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
-    previous_2 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
+    previous_1 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
+    previous_2 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
     pre_notes.add(previous_1)
     pre_notes.add(previous_2)
     

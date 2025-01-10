@@ -7,7 +7,7 @@ from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
 
-from .notes import Note
+from .files import SnFiles
 from .utilities import CustomLogger
 
 
@@ -15,7 +15,7 @@ FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
 
 
 def create_logger(log_file_name: str, *, running_tests=False) -> None:
-    """Sets up a global logger to be used throughout the program"""
+    """Set up a global logger to be used throughout the program"""
     global logger
     custom = CustomLogger('INFO')
     if not running_tests:
@@ -27,8 +27,8 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
 def user_input() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path().cwd().joinpath('config.json'), help='Full path to config')
-    parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes')
-    parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new downloads and quit')
+    parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes and files')
+    parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
     parser.add_argument('-u', '--url', help='Override device URL found within config.json')
     parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x backups.')
     parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
@@ -41,12 +41,13 @@ def load_config(config_pth: Path) -> dict:
         with open(config_pth) as config_in:
             return json.load(config_in)
     except FileNotFoundError:
-        raise SystemExit(f'Required JSON config file not found at {config_pth!s}.')
+        raise SystemExit(f'Required json config file not found at {config_pth!s}.')
     except json.JSONDecodeError:
-        raise SystemExit(f'JSON file malformed or invalid. Check your config at {config_pth!s}')
+        raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
 
 
 def get_from_device(base_url: str, uri: str) -> httpx.Response | None:
+    """Retrieve html from device"""
     with httpx.Client(base_url=base_url, timeout=1) as client:
         try:
             response = client.get(uri)
@@ -63,6 +64,9 @@ def get_from_device(base_url: str, uri: str) -> httpx.Response | None:
 
 
 def parse_html(html_text: str) -> list[dict] | list:
+    """Search for a particular json string in html. Extract it 
+    and deserialize to a dictionary. Returns list of dicts"""
+
     try:
         re_match = re.search(r"const json = '({.*?})'", html_text)
         parsed = re_match.group(1)
@@ -79,6 +83,7 @@ def parse_html(html_text: str) -> list[dict] | list:
 
 
 def device_uri_gen(url, note_details: list[dict]):
+    """Recursive generaotr to extract uri, modified date, and file size"""
     for note in note_details:
         if not note.get('isDirectory'):
             # Drop the anchor slash to call joinpath later and it work properly
@@ -95,9 +100,7 @@ def today_pth(save_dir: str) -> Path:
 
 
 def save_note(local_pth: Path, note: bytes) -> None:
-    """Makes parent directory then writes
-    note bytes to local disk"""
-
+    """Make parent directory and write file bytes object to local disk"""
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
@@ -106,15 +109,15 @@ def save_note(local_pth: Path, note: bytes) -> None:
 
 
 def save_records(note_records: list[dict], json_md: Path) -> None:
-    """Persists today's note metadata to json file"""
-    logger.info('Saving note records to metadata json file')
+    """Persist today's file metadata to json file"""
+    logger.info('Saving file records to metadata json file')
     with open(json_md, 'wt') as json_out:
         print(json.dumps(note_records), file=json_out)
 
 
 def previous_record_gen(json_md: Path, *, previous=None):
-    """Retreives last backup metadata from json and
-    yields back relevant info to serialize Note objects"""
+    """Retreive last backup metadata from json and
+    yield back relevant info to instantiate file objects"""
 
     try:
         with open(json_md) as json_in:
@@ -132,14 +135,14 @@ def previous_record_gen(json_md: Path, *, previous=None):
                record.get('modified'), record.get('size'))
 
 
-def check_for_deleted(current: set, previous: set) -> list[Note]:
-    """Looks for notes no longer on device from last backup"""
+def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
+    """Look for files no longer on device from last backup"""
     symmetric = current.symmetric_difference(previous)
     return [note for note in symmetric if note not in current]
 
 
 def purge_old_backups(base_dir: Path, *, num_backups=None, pattern='20??-*') -> None:
-    """Deletes old backups from the backup save directory"""
+    """Delete old backups from the backup save directory on local disk"""
     if num_backups:
         logger.info(f'Purging old backups, keeping last {num_backups}')
         previous_folders = sorted(base_dir.glob(pattern), reverse=True)
@@ -153,16 +156,16 @@ def run_inspection(to_download: set) -> None:
     """Inspect current notes, determine what's new or changed, and log that out"""
     logger.info('Inspecting changes only...')
     if len(to_download) > 0:
-        logger.info('New or updated notes to be downloaded from device:')
+        logger.info('New or updated files to be downloaded from device:')
     else:
-        logger.info('No new or updated notes found on device')
+        logger.info('No new or updated files found on device')
     for note in to_download:
         logger.info(f'{note.note_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
     logger.info('Inspection complete')
 
 
 def truncate_log(lines: int, minimum=100) -> None:
-    """Truncates log to whatever value is read in or at least keeps last 100 lines."""
+    """Truncate log to requested value or at least keep last 100 lines."""
     try:
         lines = int(lines)
     except (ValueError, TypeError):
@@ -205,40 +208,44 @@ def backup() -> None:
     logger.info(f'Device at {device_url}')
     logger.info(f'Saving to {save_dir.absolute()}')
 
-    httpx_response = get_from_device(device_url, 'Note')
-    device_note_info = parse_html(httpx_response.text)
+    all_files = []
+
+    for folder in FOLDERS:
+        httpx_response = get_from_device(device_url, folder)
+        device_note_info = parse_html(httpx_response.text)
+        all_files.extend(device_note_info)
 
     today = today_pth(save_dir)
 
-    todays_notes = {Note(today, uri, mdate, size) 
+    todays_files = {SnFiles(today, uri, mdate, size) 
                     for uri, mdate, size 
-                    in device_uri_gen(device_url, device_note_info)}
+                    in device_uri_gen(device_url, all_files)}
 
-    previous_notes = {Note(Path(loc), uri, mod, fsize) 
+    previous_files = {SnFiles(Path(loc), uri, mod, fsize)
                       for loc, uri, mod, fsize 
                       in previous_record_gen(json_md_file)}
 
-    for deleted_note in check_for_deleted(todays_notes, previous_notes):
-        previous_notes.discard(deleted_note)
+    for deleted_note in check_for_deleted(todays_files, previous_files):
+        previous_files.discard(deleted_note)
 
     if args.full:
-        previous_notes = set()
+        previous_files = set()
 
-    to_download = todays_notes.difference(previous_notes)
+    to_download = todays_files.difference(previous_files)
 
-    unchanged = todays_notes.intersection(previous_notes)
+    unchanged = todays_files.intersection(previous_files)
 
     if args.inspect:
         run_inspection(to_download)
         raise SystemExit()
 
-    logger.info(f'Downloading {len(to_download)} new notes from device.')
+    logger.info(f'Downloading {len(to_download)} files from device.')
     for new_note in to_download:
         download_response = get_from_device(device_url, new_note.note_uri)
         new_note.file_bytes = download_response.read()
         save_note(new_note.full_path, new_note.file_bytes)
 
-    logger.info(f'Merging {len(unchanged)} unchanged notes from local disk')
+    logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
     for current_note in unchanged:
         local_note = current_note.full_path.read_bytes()
         save_to_pth = today.joinpath(current_note.note_uri)
