@@ -1,11 +1,12 @@
 import re
 import json
-import httpx
-import itertools
 import shutil
+import itertools
 from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
+
+import httpx
 
 from .files import SnFiles
 from .utilities import CustomLogger

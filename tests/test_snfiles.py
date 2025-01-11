@@ -1,9 +1,9 @@
-import pytest
 from pathlib import Path
 from datetime import datetime
 
-from snbackup.files import SnFiles
-from snbackup.files import BadDateError
+import pytest
+
+from snbackup.files import SnFiles, BadDateError
 
 
 @pytest.fixture

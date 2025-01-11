@@ -1,13 +1,13 @@
-from snbackup import backup
-from tempfile import NamedTemporaryFile
-from pathlib import Path
-import textwrap
-import json
 import sys
-
-from snbackup.files import SnFiles
+import json
+import textwrap
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import pytest
+
+from snbackup import backup
+from snbackup.files import SnFiles
 
 # Create global logger inside backup namespace otherwise the functions will fail
 backup.create_logger(__file__, running_tests=True)
