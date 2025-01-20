@@ -1,7 +1,7 @@
 import re
 import json
 import shutil
-import itertools
+import itertools as it
 from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
@@ -12,7 +12,9 @@ from .files import SnFiles
 from .utilities import CustomLogger
 
 
-FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
+# FOLDERS = 'Note', 'Document', 'EXPORT', 'MyStyle', 'SCREENSHOT', 'INBOX',
+
+FOLDERS = {'note': 'Note', 'document': 'Document', 'export': 'EXPORT', 'mystyle': 'MyStyle', 'screenshot': 'SCREENSHOT', 'inbox': 'INBOX'}
 
 
 def create_logger(log_file_name: str, *, running_tests=False) -> None:
@@ -28,10 +30,10 @@ def create_logger(log_file_name: str, *, running_tests=False) -> None:
 def user_input() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument('-c', '--config', type=Path, default=Path().cwd().joinpath('config.json'), help='Full path to config')
-    parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes and files')
+    parser.add_argument('-f', '--full', action='store_true', help='Perform full backup of all notes and files.')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
-    parser.add_argument('-u', '--url', help='Override device URL found within config.json')
-    parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x backups.')
+    parser.add_argument('-u', '--upload', nargs='+', help='Send a file to the device. Ex: "snbackup -u myfile.pdf Documents"')
+    parser.add_argument('-p', '--purge', nargs='?', type=int, const=10, help='Remove all but the last x number of backups.')
     parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
     return parser.parse_args()
 
@@ -47,20 +49,21 @@ def load_config(config_pth: Path) -> dict:
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
 
 
-def get_from_device(base_url: str, uri: str) -> httpx.Response | None:
-    """Retrieve html from device"""
+def talk_to_device(base_url: str, uri: str, document=None) -> httpx.Response:
+    """Downloads and uploads files to Supernote device"""
     with httpx.Client(base_url=base_url, timeout=1) as client:
         try:
-            response = client.get(uri)
+            if document:  # Upload
+                response = client.post(uri, files=document)
+            else:
+                response = client.get(uri)
             response.raise_for_status()
         except (httpx.ConnectTimeout, httpx.ConnectError) as e:
             logger.error(f'Unable to reach Supernote device: {e!r}')
             raise SystemExit()
         except httpx.HTTPError as e:
             logger.error(f'{e!r}')
-            if response.status_code == 301:
-                logger.info(f'{uri!r} not found')
-                return None
+            raise SystemExit()
         return response
 
 
@@ -90,7 +93,7 @@ def device_uri_gen(url, note_details: list[dict]):
             # Drop the anchor slash to call joinpath later and it work properly
             yield note.get('uri').lstrip('/'), note.get('date'), note.get('size')
         else:
-            html = get_from_device(url, note.get('uri').lstrip('/'))
+            html = talk_to_device(url, note.get('uri').lstrip('/'))
             new_note_details = parse_html(html.text)
             yield from device_uri_gen(url, new_note_details)
 
@@ -142,6 +145,27 @@ def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
     return [note for note in symmetric if note not in current]
 
 
+def prepare_upload(upload_lst: list) -> tuple[Path, dict]:
+    """Upload file to device, assume Document folder as default if destination not provided"""
+    if len(upload_lst) == 1:
+        upload_file, device_folder = Path(upload_lst[0]), 'document'
+    elif len(upload_lst) == 2:
+        upload_file, device_folder = Path(upload_lst[0]), upload_lst[1].casefold()
+    else:
+        logger.error('Invalid number of args chosen for --upload. Supply file and destination folder')
+        raise SystemExit()
+    
+    if not upload_file.is_file():
+        logger.error(f'Supplied file {upload_file} is not found or is not a file.')
+        raise SystemExit()
+    
+    if device_folder not in FOLDERS:
+        logger.error(f"Supplied destination folder '{device_folder}' not on device.")
+        raise SystemExit()
+    
+    return FOLDERS.get(device_folder), {f'{upload_file.name}': open(upload_file, 'rb')}
+
+
 def purge_old_backups(base_dir: Path, *, num_backups=None, pattern='20??-*') -> None:
     """Delete old backups from the backup save directory on local disk"""
     if num_backups:
@@ -165,6 +189,11 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
+def check_version() -> str:
+    from importlib.metadata import version
+    return f"snbackup v{version('snbackup')}"
+
+
 def truncate_log(lines: int, minimum=100) -> None:
     """Truncate log to requested value or at least keep last 100 lines."""
     try:
@@ -182,10 +211,10 @@ def backup() -> None:
     """Main workflow logic"""
     
     args = user_input()
+    print(args)
 
     if args.version:
-        from importlib.metadata import version
-        raise SystemExit(f'snbackup v{version('snbackup')}')
+        raise SystemExit(check_version())
     
     config = load_config(args.config)
 
@@ -194,25 +223,30 @@ def backup() -> None:
         device_url = config['device_url']
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
-
+    
     num_backups = config.get('num_backups')
     truncate = config.get('truncate_log', 1000)
-
-    if args.url:
-        # TODO add validation for this url string
-        device_url = args.url
 
     save_dir = Path(save_dir)
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
     logger.info(f'Device at {device_url}')
+
+    if args.upload:
+        destination, payload = prepare_upload(args.upload)
+        response = talk_to_device(device_url, uri=destination, document=payload)
+        for upload in response.json():
+            file, size = upload.get('name'), upload.get('size')
+            logger.info(f'Uploaded {file} to {destination} folder on device ({int(size) / 1000**2:.2f} MB)')
+        raise SystemExit()
+
     logger.info(f'Saving to {save_dir.absolute()}')
 
     all_files = []
 
-    for folder in FOLDERS:
-        httpx_response = get_from_device(device_url, folder)
+    for folder in FOLDERS.values():
+        httpx_response = talk_to_device(device_url, folder)
         device_note_info = parse_html(httpx_response.text)
         all_files.extend(device_note_info)
 
@@ -242,7 +276,7 @@ def backup() -> None:
 
     logger.info(f'Downloading {len(to_download)} files from device.')
     for new_note in to_download:
-        download_response = get_from_device(device_url, new_note.file_uri)
+        download_response = talk_to_device(device_url, new_note.file_uri)
         new_note.file_bytes = download_response.read()
         save_note(new_note.full_path, new_note.file_bytes)
 
@@ -254,7 +288,7 @@ def backup() -> None:
         current_note.base_path = today
 
     if to_download or unchanged:
-        records = [note.make_record() for note in itertools.chain(to_download, unchanged)]
+        records = [note.make_record() for note in it.chain(to_download, unchanged)]
         save_records(records, json_md_file)
 
     if args.purge:
