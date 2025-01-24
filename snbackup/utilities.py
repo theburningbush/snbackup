@@ -24,7 +24,7 @@ class CustomLogger:
 
     log_files = []
 
-    def __init__(self, level: str) -> None:
+    def __init__(self, level='INFO') -> None:
         self.level = level
         self.format = logging.Formatter(fmt='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
         self.logger = logging.getLogger(__name__)
@@ -63,3 +63,15 @@ class CustomLogger:
     def __repr__(self) -> str:
         return f'{type(self).__name__}({self.level})'
 
+
+def truncate_log(lines: int, minimum=100) -> None:
+    """Truncate log to requested value or at least keep last 100 lines."""
+    try:
+        lines = int(lines)
+    except (ValueError, TypeError):
+        raise SystemExit('Warning: "truncate_log" config option should be an integer')
+    else:
+        lines = minimum if lines < minimum else lines
+
+    print(f'Truncating log file to last {lines} lines')
+    CustomLogger.truncate_logs(lines)
