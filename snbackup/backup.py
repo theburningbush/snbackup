@@ -1,52 +1,20 @@
-import os
 import re
 import json
 import shutil
 import itertools as it
 from pathlib import Path
-from argparse import ArgumentParser, Namespace
 
 import httpx
 
 from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
-from .helpers import EXTS, FOLDERS, check_version, today_pth, load_config
+from .helpers import EXTS, FOLDERS, user_input, check_version, today_pth, load_config, bytes_to_mb
 
 
-CONFIG_ENV = os.getenv('SNBACKUP_CONF', Path().cwd().joinpath('config.json'))
-
-
-def user_input() -> Namespace:
-    parser = ArgumentParser()
-    parser.add_argument('-c', '--config', type=Path, default=Path(CONFIG_ENV), help='Path to config.json file')
-    parser.add_argument('-f', '--full', action='store_true', help='Download all notes and files from device. Disregard any saved locally.')
-    parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
-    parser.add_argument('-u', '--upload', nargs='+', help='Send one or more files to device. "snbackup -u file1 file2 file3"')
-    parser.add_argument(
-        '-d', '--destination', default='document', type=str.lower, choices=FOLDERS, help='Destination folder to send file upload'
-    )
-    parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
-    parser.add_argument(
-        '--notes',
-        action='store_const',
-        const=['Note'],
-        default=FOLDERS.values(),
-        help='Only download notes from within the Note folder on device',
-    )
-    parser.add_argument(
-        '--cleanup',
-        nargs='?',
-        type=int,
-        const=10,
-        help='Remove locally stored previous backups. Keeps last 10 or any supplied number.',
-    )
-    return parser.parse_args()
-
-
-def create_logger(log_file_name: str, *, running_tests=False) -> None:
+def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> None:
     """Set up a global logger to be used throughout the program"""
     global logger
-    custom = CustomLogger('INFO')
+    custom = CustomLogger(level)
     if not running_tests:
         custom.to_file(log_file_name)
     custom.to_console()
@@ -105,13 +73,13 @@ def device_uri_gen(url: str, note_details: list[dict]):
             yield from device_uri_gen(url, device_data)
 
 
-def save_note(local_pth: Path, note: bytes) -> None:
+def save_file(local_pth: Path, file: bytes) -> None:
     """Make parent directory and write file bytes object to local disk"""
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
-    with open(local_pth, 'wb') as note_output:
-        note_output.write(note)
+    with open(local_pth, 'wb') as file_output:
+        file_output.write(file)
 
 
 def save_records(file_records: list[dict], json_md: Path) -> None:
@@ -158,12 +126,12 @@ def upload_files(url: str, to_upload: list, destination: str) -> str | None:
     for file in prepare_upload(to_upload):
         response = talk_to_device(url, uri=destination, document=file)
         for resp in response.json():
-            file, size = resp.get('name'), resp.get('size')
-            logger.info(f'Uploaded {file} to {destination} folder ({int(size) / 1000**2:.2f} MB)')
+            file, size = resp.get('name'), resp.get('size', 0)
+            logger.info(f'Uploaded {file} to {destination} folder ({bytes_to_mb(size)} MB)')
     return 'Upload complete' if response else None
 
 
-def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern='20??-*') -> None:
+def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern='202?-*') -> None:
     """Delete old backups from the backup save directory on local disk"""
     if num_backups and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
@@ -181,8 +149,8 @@ def run_inspection(to_download: set) -> None:
         logger.info('New or updated files to download:')
     else:
         logger.info('No new or updated files to download:')
-    for c, note in enumerate(to_download, start=1):
-        logger.info(f'{c}.{note.file_uri} ({int(note.file_size) / 1000**2:.2f} MB)')
+    for c, file in enumerate(to_download, start=1):
+        logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')
 
 
@@ -257,13 +225,13 @@ def backup() -> None:
     for new_file in to_download:
         download_response = talk_to_device(device_url, new_file.file_uri)
         new_file.file_bytes = download_response.read()
-        save_note(new_file.full_path, new_file.file_bytes)
+        save_file(new_file.full_path, new_file.file_bytes)
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
     for previous_file in unchanged:
         local_note = previous_file.full_path.read_bytes()
         save_to_pth = today.joinpath(previous_file.file_uri)
-        save_note(save_to_pth, local_note)
+        save_file(save_to_pth, local_note)
         previous_file.base_path = today
 
     if to_download or unchanged:
