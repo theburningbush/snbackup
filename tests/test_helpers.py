@@ -18,9 +18,7 @@ class ArgvSwitcher:
         return self
     
     def __exit__(self, *args):
-        """Intentially not dealing with exceptions so they propagate up"""
         sys.argv = self.current
-        # Return True if you deal plan to deal with any exceptions
 
 
 def test_user_input():
@@ -48,21 +46,20 @@ def test_load_config():
     config_dict = {'save_dir': '/Users/devin/Documents/Supernote', 'device_url': 'http://192.168.1.105:8089/'}
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
         temp.write(json.dumps(config_dict))
-        temp.flush()  # Force the write
-        pth = Path(temp.name)  # new Path object for load_config function
+        temp.flush() 
+        pth = Path(temp.name)
         assert helpers.load_config(pth) == config_dict
 
-        temp.seek(0)  # Reset file object back to beginning
-        temp.write(json.dumps('JUNK1Z$:$((]]:'))  # Write junk overtop existing json string within file
+        temp.seek(0)
+        temp.write(json.dumps('JUNK1Z$:$((]]:')) 
         temp.flush()
-        with pytest.raises(SystemExit) as exc_info:  # Abort if you can't deserialize json config file
-            helpers.load_config(pth)  # Same underlying path file was updated
+        with pytest.raises(SystemExit) as exc_info: 
+            helpers.load_config(pth)
         assert f'Check your config at {temp.name}' in str(exc_info.value)
 
-    with pytest.raises(SystemExit) as exc_info:  # Moved out of context so file is deleted (delete=True default)
-        helpers.load_config(pth)  # The path object itself exists but the underlying file is gone
-    # assert f'file not found at {temp.name}' in str(exc_info)
-    assert f'file not found at' in str(exc_info)  # Reworking this so it works on Windows systems
+    with pytest.raises(SystemExit) as exc_info:  
+        helpers.load_config(pth)  
+    assert f'file not found at' in str(exc_info)
 
 
 def test_today_path():
@@ -89,7 +86,7 @@ def test_check_version():
 
 
 def test_bytes_to_mb():
-    size1 = 23570000  # 23.57
-    size2 = 10000000  # 10.00
+    size1 = 23570000
+    size2 = 10000000
     assert '23.57' == helpers.bytes_to_mb(size1)
     assert '10.00' == helpers.bytes_to_mb(size2)

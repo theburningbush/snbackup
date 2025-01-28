@@ -115,19 +115,18 @@ def json_string() -> str:
 def test_previous_record_gen(metadata):
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
         temp.write(json.dumps(metadata))
-        temp.flush()  # Force the write
+        temp.flush() 
         pth = Path(temp.name)
         data_lst = [
             (data.get('current_loc'), data.get('uri'), data.get('modified'), data.get('size')) for data in metadata
         ]
         assert list(backup.previous_record_gen(pth)) == data_lst
 
-        temp.seek(0)  # Reset back to beginning
-        temp.write('*JUNK*/^Line[{{***')  # Write in bad text overtop json so it can't deserialize properly
+        temp.seek(0)  
+        temp.write('*JUNK*/^Line[{{***')
         temp.flush()
         assert list(backup.previous_record_gen(pth)) == []
 
-    # Moved out of context so this file is now gone. Hence file not found test
     not_found_error = backup.previous_record_gen(pth)
     assert list(not_found_error) == []
 
