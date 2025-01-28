@@ -50,10 +50,14 @@ By default, the device will attempt to backup _everything_ on device. This inclu
 ## Uploading:
 You can also _upload_ files from your local computer with the `-u` flag to any of the following folders found on the Supernote device: **Note, Document, EXPORT, MyStyle, SCREENSHOT, INBOX**.  
 
-For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default. The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the device's _MyStyle_ folder.  
+For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default. The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the destination folder _MyStyle_.  
 
-Additionally, you can specify multiple files at once separated by a space between files:  
-`snbackup -u file1 file2 fil3`
+Additionally, you can specify multiple files at once separated by a space:  
+`snbackup -u file1 file2 file3`  
+
+If no destination is specified after the `-d` flag the device Document folder is used.  
+
+The accepted file formats for the upload are **.note, .pdf, epub, .docx, .doc, .txt, .png, .jpg, .jpeg, .bmp, .webp, .cbz, .fb2, .xps, .mobi**  
 
 ## Additional Options:
 - Show all available command line options:  
@@ -82,4 +86,4 @@ There are additional configuration options that can be set in the config.json fi
     "truncate_log": 500
 }
 ```
-In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program log file from exceeding 500 lines. With these set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified on the command line.  
+In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified.    
