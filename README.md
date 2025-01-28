@@ -1,6 +1,6 @@
 ## Command line utility to wirelessly backup files from a Supernote device
 
-The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to your local computer. I have no interest in making user accounts, using mobile apps, or storing my notes with third-party cloud providers. This tool attempts to archive device files for storage and safekeeping and isn't intended for exporting, converting, or sharing your notes.  
+The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format. 
 
 This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this application will break.  
 
