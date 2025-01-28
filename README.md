@@ -63,13 +63,13 @@ The accepted file formats for the upload are **.note, .pdf, epub, .docx, .doc, .
 - Show all available command line options:  
 `snbackup -h`  
 
-- Inspect and show new files to be downloaded from device and quit without downloading:  
+- Inspect new files to be downloaded from device and but do not download:  
 `snbackup -i`  
 
-- The full backup flag will ignore previously saved backups and will force the tool to download all files from device:  
+- The full backup flag will ignore previously saved backups and force the tool to download new copies of all files from device:  
 `snbackup -f`
 
-- Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones: 
+- Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones:  
 `snbackup --cleanup 5`
 
 - Print program version:  
