@@ -13,12 +13,12 @@ class BadDateError(Exception):
 
 
 @total_ordering
-class Note:
-    """Represent an individual Supernote note"""
+class SnFiles:
+    """Represent an individual Supernote file"""
 
-    def __init__(self, base_path: Path, note_uri: str, last_modified: str, file_size: int) -> None:
+    def __init__(self, base_path: Path, file_uri: str, last_modified: str, file_size: int) -> None:
         self.base_path = base_path
-        self.note_uri = note_uri
+        self.file_uri = file_uri
         self.last_modified = last_modified
         self.file_size = file_size
         self.file_bytes = b''
@@ -29,7 +29,7 @@ class Note:
 
     @property
     def full_path(self) -> Path:
-        return self.base_path.joinpath(self.note_uri)
+        return self.base_path.joinpath(self.file_uri)
 
     @property
     def file_bytes(self) -> bytes:
@@ -70,16 +70,16 @@ class Note:
         return (self.last_modified, self.file_size) < (other.last_modified, other.file_size)
 
     def __hash__(self) -> int:
-        return hash((self.note_uri, self.last_modified, self.file_size))
+        return hash((self.file_uri, self.last_modified, self.file_size))
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.base_path!r}, {self.note_uri!r}, '{self.last_modified}', {self.file_size})"
+        return f"{type(self).__name__}({self.base_path!r}, {self.file_uri!r}, '{self.last_modified}', {self.file_size})"
 
     def make_record(self) -> dict:
         return {
             'saved': self.save_date,
             'current_loc': self.base_path.as_posix(),
-            'uri': self.note_uri,
+            'uri': self.file_uri,
             'modified': self.last_modified.strftime('%Y-%m-%d %H:%M:%S'),
             'size': self.file_size,
         }

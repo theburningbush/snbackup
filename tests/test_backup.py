@@ -1,15 +1,14 @@
-from snbackup import backup
-from tempfile import NamedTemporaryFile
-from pathlib import Path
-import textwrap
 import json
-import sys
-
-from snbackup.notes import Note
+import textwrap
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import pytest
 
-# Create global logger inside backup namespace otherwise the functions will fail
+from snbackup import backup
+from snbackup.files import SnFiles
+
+# Create global logger inside backup namespace otherwise the functions with logging will fail
 backup.create_logger(__file__, running_tests=True)
 
 
@@ -108,19 +107,24 @@ def html_text() -> str:
     """)
 
 
+@pytest.fixture
+def json_string() -> str:
+    return '{"availableMemory":23330586624,"deviceName":"Supernote","fileList":[{"date":"2024-07-17 21:19","extension":"","isDirectory":true,"name":"Work","size":0,"uri":"/Note/Work"},{"date":"2024-07-13 22:17","extension":"","isDirectory":true,"name":"Study","size":0,"uri":"/Note/Study"},{"date":"2024-07-12 08:19","extension":"","isDirectory":true,"name":"Misc","size":0,"uri":"/Note/Misc"},{"date":"2024-07-11 10:31","extension":"note","isDirectory":false,"name":"Today.note","size":8675309,"uri":"/Note/Today.note"},{"date":"2024-06-27 16:32","extension":"note","isDirectory":false,"name":"Tomorrow.note","size":27926564,"uri":"/Note/Tomorrow.note"},{"date":"2024-07-19 08:25","extension":"note","isDirectory":false,"name":"Yesterday.note","size":12221169,"uri":"/Note/Yesterday.note"},{"date":"2024-05-23 08:21","extension":"note","isDirectory":false,"name":"Stuff.note","size":4726881,"uri":"/Note/Stuff.note"},{"date":"2024-06-09 05:53","extension":"note","isDirectory":false,"name":"ABC123.note","size":786656,"uri":"/Note/ABC123.note"}],"routeList":[{"name":"Supernote","path":"/"},{"name":"Note","path":"/Note"}],"totalMemory":32.0}'
+
+
 def test_previous_record_gen(metadata):
-    # TODO look at the builtin mktemp for pytest instead of rolling your own you heathen
     with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
         temp.write(json.dumps(metadata))
-        temp.seek(0)  # Reset back to beginning of file after write
+        temp.flush()  # Force the write
         pth = Path(temp.name)
         data_lst = [
             (data.get('current_loc'), data.get('uri'), data.get('modified'), data.get('size')) for data in metadata
         ]
         assert list(backup.previous_record_gen(pth)) == data_lst
 
+        temp.seek(0)  # Reset back to beginning
         temp.write('*JUNK*/^Line[{{***')  # Write in bad text overtop json so it can't deserialize properly
-        temp.flush()  # Force the write
+        temp.flush()
         assert list(backup.previous_record_gen(pth)) == []
 
     # Moved out of context so this file is now gone. Hence file not found test
@@ -128,7 +132,11 @@ def test_previous_record_gen(metadata):
     assert list(not_found_error) == []
 
 
-def test_parse_html(html_text):
+def test_parse_html(html_text, json_string):
+    assert backup.parse_html(html_text) == json_string
+
+
+def test_load_parsed(json_string):
     response = [
         {
             'date': '2024-07-17 21:19',
@@ -195,39 +203,21 @@ def test_parse_html(html_text):
             'uri': '/Note/ABC123.note',
         },
     ]
-    assert backup.parse_html(html_text) == response
+    assert backup.load_parsed(json_string) == response
 
 
 def test_check_for_deleted():
     # Common notes 
-    cur_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
-    pre_notes = {Note(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    cur_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    pre_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
 
     # New note created on device since last backup
-    cur_notes.add(Note(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
+    cur_notes.add(SnFiles(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
 
     # Two notes only found in previous, deleted from device since last backup
-    previous_1 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
-    previous_2 = Note(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
+    previous_1 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
+    previous_2 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
     pre_notes.add(previous_1)
     pre_notes.add(previous_2)
     
     assert backup.check_for_deleted(cur_notes, pre_notes) == [previous_1, previous_2]
-
-
-def test_user_input():
-    # Running this one last since I'm altering sys.argv. Doesn't seem to impact anything else but just in case - could also make context manager
-    # Passing in all currently available cli flags
-    sys.argv[1:] = ['-c', 'path/to/test_config.json', '-f', '-i', '-u', 'http://192.168.1.100:8089', '-p', '5', '-v']
-    assert backup.user_input() == (Path('path/to/test_config.json'), True, True, 'http://192.168.1.100:8089', 5, True)
-    sys.argv = ['']  # Pretending we're calling command with no additional cli flags
-    assert backup.user_input() == (Path().cwd().joinpath('config.json'), False, False, None, None, False)
-
-
-def test_load_config():
-    config_dict = {'save_dir': '/Users/devin/Documents/Supernote', 'device_url': 'http://192.168.1.105:8089/'}
-    with NamedTemporaryFile(mode='w+t', encoding='utf-8', prefix='dtb', delete_on_close=False) as temp:
-        temp.write(json.dumps(config_dict))
-        temp.seek(0)
-        pth = Path(temp.name)
-        assert backup.load_config(pth) == config_dict

@@ -1,24 +1,22 @@
-## Simple utility to backup notes from a Supernote device over WiFi
+## Command line utility to wirelessly backup files from a Supernote device
 
-I created this cli tool to backup notes from my Supernote Nomad (A6 X2) over WiFi. No user accounts, mobile apps, or third party cloud service providers are necessary. It will *probably* work on any of the Supernote devices running the most up-to-date software.
+The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to your local computer. I have no interest in making user accounts, using mobile apps, or storing my notes with third-party cloud providers.  
 
-Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)
+This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this cli tool will break.
 
-The purpose is to download notes from a Supernote device and save them locally for backup and safe keeping. This is different than exporting notes as it does not attempt to convert notes to a different format. It's only meant to download the note files (with a `.note` extension) exactly as found on the device. If you are interested in converting your notes to PDF or PNG after downloading, see another project called [supernote-tool](https://github.com/jya-dev/supernote-tool).
+Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)  
 
-It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. This feature creates a small web server directly on the device and makes it possible to browse its files through a web browser. The Supernote device and your computer must be on the same local network.
-
-### Steps:
+### Setup Process:
 
 1. Install Python 3.10 or newer along with pip
 
-2. Setup your Python virtual environment and install with `pip install snbackup`
+2. Setup your Python virtual environment and install with `pip install snbackup`. My preference is to install with `pipx` which makes the tool globally available.
 
-3. Create a folder on your computer to store your Supernote note backups
+3. Create a folder somehwere on your computer to store your Supernote backups.
 
-4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is *required* to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups and run the program from there.
+4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is **_required_** to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups.  
 
-### Example config.json:
+#### Example config.json:  
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
@@ -26,48 +24,62 @@ It works by using the builtin [Browse & Access](https://support.supernote.com/en
 }
 ```
 
-> All note backups, metadata files, and logs are located under the **save_dir** directory.  
-
-> It should work the same for Mac, Linux, or **Windows** machines. _Use forward slashes just like in the example config above even on **Windows** -_ `C:/Users/devin/Documents/Supernote`. Technically, the **_C:_** is optional here but you can include it if you like or if you wish to specify a different disk.
-
-> The **device_url** needed will be displayed on the Supernote when Browse & Access is enabled. Use that URL from your device here.  
-
 5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on  
 
-6. There are two main ways to run the command from your terminal or command line:
-    - This will look for the required **config.json** in your current working directory  
+6. There are three main ways to run the `snbackup` tool from your terminal or command line:
+    - This will look for the required **_config.json_** from step **4** in your current working directory:  
     `snbackup` 
 
-    - This optionally specifies the location of the required **config.json** file  
+    - This optionally specifies the location of the required **_config.json_** file  
     `snbackup -c /the/path/to/config.json`  
 
-The first run may take a few minutes or more as it will attempt to download all notes. Subsequent runs only download new or modified notes; this greatly speeds up future backups.
+    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**.  
+    `export SNBACKUP_CONF="/path/to/config.json"`
 
-You can always force a full backup of all notes by running `snbackup -f` or `snbackup --full`
+---
 
-The notes are stored *as is* under your local save directory defined in the `config.json` file.  
+The `snbackup` tool will attempt to connect to your device and download _all files_ it finds to the `save_dir` directory specified in your **_config.json_**. The first run may take a few minutes or more as it will attempt to download everything; subsequent runs only download new or modified files.  
 
-> If a note called `Ideas` is found under a folder called `Stuff` on your Supernote device, it will be backed up locally as `/Users/devin/Documents/Supernote/<YYYY-MM-DD>/Note/Stuff/Ideas.note`  
+The tool will make a new directory within your `save_dir` folder for today and save all files as they are found on the device. For example, if a note titled `Ideas` is stored within your `Stuff` folder, it will be backed up locally as `/your/chosen/directory/<YYYY-MM-DD>/Note/Stuff/Ideas.note`. This example would translate to `C:\your\chosen\directory\<YYYY-MM-DD>\Note\Stuff\Ideas.note` on a Windows computer.
 
-> On a Windows machine this would translate to `C:\Users\devin\Documents\Supernote\<YYYY-MM-DD>\Note\Stuff\Ideas.note`
+Everything `snbackup` does will be printed out to your terminal as well as logged to the `snbackup.log` file also stored in your `save_dir` directory.  
 
-> Downloaded notes are separated by days in the format `YYYY-MM-DD` within your **save_dir** directory
-  
-## Some additionl options:
-- Show all available command line options  
-`snbackup -h`
+## Helpful Information:
+By default, the device will attempt to backup _everything_ on device. This includes files found in the Document folder, EXPORT folder, SCREENSHOT folder, etc. If you prefer to only download your notes which are found within the device's Note folder, use the command `snbackup --notes`.  
 
-- Inspect new notes to be downloaded from device and quit without downloading  
-`snbackup -i`
+## Uploading:
+You can also _upload_ files from your local computer with the `-u` flag to any of the following folders found on the Supernote device: **Note, Document, EXPORT, MyStyle, SCREENSHOT, INBOX**.  
 
-- **EXPERIMENTAL:** Purge (delete) old backups from your local **save_dir** directory and keeps only the number requested here. In this example, all but the 5 most recent backups are removed.   
-`snbackup -p 5`
+For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default. The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the device's _MyStyle_ folder.  
 
-- **EXPERIMENTAL:** You can optionally add **num_backups** to your `config.json` file to have it automatically remove old backups from your backup directory without needing to specify using the `-p` flag. **Be advised, this deletes your old backups! Handle with care.**  
+Additionally, you can specify multiple files at once separated by a space inbetween:  
+`snbackup -u file1 file2 fil3`
+
+## Additonal Options:
+- Show all available command line options:  
+`snbackup -h`  
+
+- Inspect and show new files to be downloaded from device and quit without downloading:  
+`snbackup -i`  
+
+- The full backup flag will ignore previously saved backups and will force the tool to download all files from device  
+`snbackup -f`
+
+- Remove all but the specified number of backups from your local backup directory. This example will keep only the last 5 most recent backups and delete any older ones.  
+`snbackup --cleanup 5`
+
+- Print program version.  
+`snbackup -v`  
+
+---  
+There are additional configuration options that can be set in the config.json file.  
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
-    "device_url": "http://192.168.1.105:8089/",
-    "num_backups": 3
+    "device_url": "http://192.168.1.105:8089/"
+    "num_backups": 7,
+    "cleanup": true,
+    "truncate_log": 500
 }
 ```
+In additon to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program log file from exceeding 500 lines. With these set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified on the command line.  

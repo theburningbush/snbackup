@@ -1,14 +1,14 @@
-import pytest
 from pathlib import Path
 from datetime import datetime
 
-from snbackup.notes import Note
-from snbackup.notes import BadDateError
+import pytest
+
+from snbackup.files import SnFiles, BadDateError
 
 
 @pytest.fixture
-def some_note() -> Note:
-    return Note(Path('/test/path/2024-08-01'), 'uri/fake.note', '2024-07-04 13:45:01', 404040)
+def some_note() -> SnFiles:
+    return SnFiles(Path('/test/path/2024-08-01'), 'uri/fake.note', '2024-07-04 13:45:01', 404040)
 
 
 def test_save_date(some_note):
