@@ -156,9 +156,7 @@ def run_inspection(to_download: set) -> None:
 
 def backup() -> None:
     """Main workflow logic"""
-
     args = user_input()
-    print(args)
 
     if args.version:
         raise SystemExit(check_version('snbackup'))
