@@ -86,4 +86,9 @@ There are additional configuration options that can be set in the config.json fi
     "truncate_log": 500
 }
 ```
-In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified.    
+In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified.  
+
+### Tips:
+- If your Supernote device's IP address changes often on your local network, consider assigning it a static IP address. This can typically be done by logging into your router and configuring it there. Consult your router's documentation.  
+
+- Windows systems use the backslash character `\` as a separator for file paths. This is tricky for JSON files. Luckily, you can still use forward slashes `/` as show in the example config.json even on Windows. However, you can also escape the backslashes if you prefer. For example your `save_dir` might look something like this `"C:\\Users\\devin\\My Documents\\Supernote"` on a Windows computer.  
