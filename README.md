@@ -1,8 +1,8 @@
 ## Command line utility to wirelessly backup files from a Supernote device
 
-The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to your local computer. I have no interest in making user accounts, using mobile apps, or storing my notes with third-party cloud providers.  
+The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to your local computer. I have no interest in making user accounts, using mobile apps, or storing my notes with third-party cloud providers. This tool attempts to archive device files for storage and safekeeping and isn't intended for exporting, converting, or sharing your notes.  
 
-This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this cli tool will break.
+This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this application will break.  
 
 Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)  
 
@@ -12,7 +12,7 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
 
 2. Setup your Python virtual environment and install with `pip install snbackup`. My preference is to install with `pipx` which makes the tool globally available.
 
-3. Create a folder somehwere on your computer to store your Supernote backups.
+3. Create a folder somewhere on your computer to store your Supernote backups.
 
 4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is **_required_** to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups.  
 
@@ -52,23 +52,23 @@ You can also _upload_ files from your local computer with the `-u` flag to any o
 
 For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default. The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the device's _MyStyle_ folder.  
 
-Additionally, you can specify multiple files at once separated by a space inbetween:  
+Additionally, you can specify multiple files at once separated by a space between files:  
 `snbackup -u file1 file2 fil3`
 
-## Additonal Options:
+## Additional Options:
 - Show all available command line options:  
 `snbackup -h`  
 
 - Inspect and show new files to be downloaded from device and quit without downloading:  
 `snbackup -i`  
 
-- The full backup flag will ignore previously saved backups and will force the tool to download all files from device  
+- The full backup flag will ignore previously saved backups and will force the tool to download all files from device:  
 `snbackup -f`
 
-- Remove all but the specified number of backups from your local backup directory. This example will keep only the last 5 most recent backups and delete any older ones.  
+- Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones: 
 `snbackup --cleanup 5`
 
-- Print program version.  
+- Print program version:  
 `snbackup -v`  
 
 ---  
@@ -82,4 +82,4 @@ There are additional configuration options that can be set in the config.json fi
     "truncate_log": 500
 }
 ```
-In additon to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program log file from exceeding 500 lines. With these set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified on the command line.  
+In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program log file from exceeding 500 lines. With these set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified on the command line.  
