@@ -23,14 +23,15 @@ def test_file_bytes(some_note):
     assert some_note.file_bytes == b''
 
 
-def test_file_bytes_raises_typerror(some_note):
-    with pytest.raises(TypeError):
+def test_file_bytes_raises_type_error(some_note):
+    with pytest.raises(TypeError) as exc_info:
         some_note.file_bytes = 'not_bytes_object'
+        assert 'File must be bytes object' in str(exc_info)
 
 
 def test_file_bytes_sets_properly(some_note):
     some_note.file_bytes = b'actual_bytes_object'
-    some_note.file_bytes == b'actual_bytes_object'
+    assert some_note.file_bytes == b'actual_bytes_object'
 
 
 def test_last_modified(some_note):
