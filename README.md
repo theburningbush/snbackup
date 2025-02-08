@@ -10,13 +10,13 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
 
 1. Install Python 3.10 or newer along with pip
 
-2. Setup your Python virtual environment and install with `pip install snbackup`. My preference is to install with `pipx` which makes the tool globally available.
+2. Setup your Python virtual environment and install with `pip install snbackup`. You could also use `pipx` or `uv` to make it globally available on your system.
 
 3. Create a folder somewhere on your computer to store your Supernote backups.
 
 4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is **_required_** to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups.  
 
-#### Example config.json:  
+#### Example config.json (must contain _save_dir_ and _device_url_):  
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
@@ -30,10 +30,10 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
     - This will look for the required **_config.json_** from step **4** in your current working directory:  
     `snbackup` 
 
-    - This optionally specifies the location of the required **_config.json_** file  
+    - This optionally specifies the location of the required **_config.json_** file:  
     `snbackup -c /the/path/to/config.json`  
 
-    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**.  
+    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_** and then run `snbackup` from any directory without needing to specify the config location.  
     `export SNBACKUP_CONF="/path/to/config.json"`
 
 ---
@@ -45,7 +45,9 @@ The tool will make a new directory within your `save_dir` folder for today and s
 Everything `snbackup` does will be printed out to your terminal as well as logged to the `snbackup.log` file also stored in your `save_dir` directory.  
 
 ## Helpful Information:
-By default, the device will attempt to backup _everything_ on device. This includes files found in the Document folder, EXPORT folder, SCREENSHOT folder, etc. If you prefer to only download your notes which are found within the device's Note folder, use the command `snbackup --notes`.  
+By default, the tool will attempt to backup _everything_ on device. This includes files found in the Document folder, EXPORT folder, SCREENSHOT folder, etc. If you prefer to only download your notes which are found within the device's Note folder, use the command `snbackup --notes`.  
+
+It does not currently attempt to download files from a micro sd card if one has been installed on the Supernote device.  
 
 ## Uploading:
 You can also _upload_ files from your local computer with the `-u` flag to any of the following folders found on the Supernote device: **Note, Document, EXPORT, MyStyle, SCREENSHOT, INBOX**.  
@@ -66,7 +68,7 @@ The accepted file formats for the upload are **.note, .pdf, epub, .docx, .doc, .
 - Inspect new files to be downloaded from device and but do not download:  
 `snbackup -i`  
 
-- The full backup flag will ignore previously saved backups and force the tool to download new copies of all files from device:  
+- The full backup flag will ignore previously saved backups and force the tool to redownload everything from device:  
 `snbackup -f`
 
 - Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones:  
@@ -86,9 +88,11 @@ There are additional configuration options that can be set in the config.json fi
     "truncate_log": 500
 }
 ```
-In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will happen automatically each time the tool runs, and the `--cleanup` flag no longer needs to be specified.  
+In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will run automatically, and the `--cleanup` flag no longer needs to be specified.  
+
+By default the _snbackup.log_ file only keeps the last 1000 lines. This number can be adjusted in the config.json file.
 
 ### Tips:
-- If your Supernote device's IP address changes often on your local network, consider assigning it a static IP address. This can typically be done by logging into your router and configuring it there. Consult your router's documentation.  
+- If your Supernote device's IP address changes often on your local network, consider assigning it a static IP address. This can typically be done by logging into your router and configuring it there.  
 
-- Windows systems use the backslash character `\` as a separator for file paths. This is tricky for JSON files. Luckily, you can still use forward slashes `/` as show in the example config.json even on Windows. However, you can also escape the backslashes if you prefer. For example your `save_dir` might look something like this `"C:\\Users\\devin\\My Documents\\Supernote"` on a Windows computer.  
+- Windows systems use the backslash character `\` as a separator for file paths. This is tricky for JSON files. Luckily, you can still use forward slashes `/` as shown in the example config.json even on Windows. However, you can also escape the backslashes if you prefer. For example your `save_dir` might look something like this `"C:\\Users\\devin\\My Documents\\Supernote"` on a Windows computer.  

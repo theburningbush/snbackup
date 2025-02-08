@@ -73,5 +73,4 @@ def truncate_log(lines: int, minimum=100) -> None:
     else:
         lines = minimum if lines < minimum else lines
 
-    print(f'Truncating log file to last {lines} lines')
     CustomLogger.truncate_logs(lines)
