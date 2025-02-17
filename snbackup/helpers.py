@@ -48,9 +48,9 @@ def load_config(config_pth: Path) -> dict:
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
 
 
-def today_pth(save_dir: str) -> Path:
+def today_pth(save_dir: Path) -> Path:
     """Create today's Path object in YYYY-MM-DD format"""
-    return Path(save_dir).joinpath(str(date.today()))
+    return save_dir.joinpath(str(date.today()))
 
 
 def check_version(name: str) -> str:
@@ -66,6 +66,7 @@ def bytes_to_mb(byte_size: int) -> str:
 def count_backups(directory: Path, pattern='202?-*') -> tuple:
     """Counts number of backup folders and returns oldest and 
     newest found on local disk"""
+
     previous = sorted(directory.glob(pattern))
     return len(previous), previous[0], previous[-1]
 

@@ -180,7 +180,7 @@ def backup() -> None:
 
     if args.list:
         num, oldest, latest = count_backups(save_dir)
-        logger.info(f'{num} backups found in {save_dir} ({bytes_to_mb(recursive_scan(Path(save_dir)))} MB)')
+        logger.info(f'{num} backups found in {save_dir} ({bytes_to_mb(recursive_scan(save_dir))} MB)')
         logger.info(f'Oldest backup: {oldest.name} ({bytes_to_mb(recursive_scan(oldest))} MB)')
         logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
         raise SystemExit()

@@ -64,8 +64,8 @@ def test_load_config():
 
 def test_today_path():
     todays_date = date.today()
-    test_path = '/some/test/path/'
-    assert Path(f'{test_path}{todays_date}') == helpers.today_pth(test_path)
+    test_path = '/some/test/path'
+    assert Path(f'{test_path}/{todays_date}') == helpers.today_pth(Path(test_path))
 
 
 def test_check_version():
