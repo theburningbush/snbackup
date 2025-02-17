@@ -59,7 +59,7 @@ Additionally, you can specify multiple files at once separated by a space:
 
 If no destination is specified after the `-d` flag the device Document folder is used.  
 
-The accepted file formats for the upload are **.note, .pdf, epub, .docx, .doc, .txt, .png, .jpg, .jpeg, .bmp, .webp, .cbz, .fb2, .xps, .mobi**  
+The accepted file formats for the upload are **.note, .pdf, .epub, .docx, .doc, .txt, .png, .jpg, .jpeg, .bmp, .webp, .cbz, .fb2, .xps, .mobi**  
 
 ## Additional Options:
 - Show all available command line options:  
