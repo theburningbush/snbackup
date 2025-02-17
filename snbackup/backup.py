@@ -8,7 +8,8 @@ import httpx
 
 from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
-from .helpers import EXTS, FOLDERS, user_input, check_version, today_pth, load_config, bytes_to_mb
+from .helpers import (EXTS, FOLDERS, user_input, check_version, today_pth, 
+                      load_config, bytes_to_mb, count_backups, recursive_scan)
 
 
 def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> None:
@@ -176,6 +177,14 @@ def backup() -> None:
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
+
+    if args.list:
+        num, oldest, latest = count_backups(save_dir)
+        logger.info(f'{num} backups found in {save_dir} ({bytes_to_mb(recursive_scan(Path(save_dir)))} MB)')
+        logger.info(f'Oldest backup: {oldest.name} ({bytes_to_mb(recursive_scan(oldest))} MB)')
+        logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
+        raise SystemExit()
+
     logger.info(f'Device at {device_url}')
 
     if args.upload:

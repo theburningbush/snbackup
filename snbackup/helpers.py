@@ -4,10 +4,8 @@ from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
 
-
 FOLDERS = {'note': 'Note', 'document': 'Document', 'export': 'EXPORT', 'mystyle': 'MyStyle', 'screenshot': 'SCREENSHOT', 'inbox': 'INBOX'}
-EXTS = '.note', '.pdf', 'epub', '.docx', '.doc', '.txt', '.png', '.jpg', '.jpeg', '.bmp', '.webp', '.cbz', '.fb2', '.xps', '.mobi'
-
+EXTS = '.note', '.pdf', '.epub', '.docx', '.doc', '.txt', '.png', '.jpg', '.jpeg', '.bmp', '.webp', '.cbz', '.fb2', '.xps', '.mobi'
 CONFIG_ENV = os.getenv('SNBACKUP_CONF', Path().cwd().joinpath('config.json'))
 
 
@@ -20,6 +18,7 @@ def user_input() -> Namespace:
     parser.add_argument(
         '-d', '--destination', default='document', type=str.lower, choices=FOLDERS, help='Destination folder to send file upload'
     )
+    parser.add_argument('-ls', '--list', action='store_true', help='List out information about backups found locally')
     parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
     parser.add_argument(
         '--notes',
@@ -62,3 +61,17 @@ def check_version(name: str) -> str:
 def bytes_to_mb(byte_size: int) -> str:
     """Convert bytes to Megabytes"""
     return format(byte_size / 1000**2, '.2f')
+
+
+def count_backups(directory: Path, pattern='202?-*') -> tuple:
+    """Counts number of backup folders and returns oldest and 
+    newest found on local disk"""
+    previous = sorted(directory.glob(pattern))
+    return len(previous), previous[0], previous[-1]
+
+
+def recursive_scan(path: Path) -> int:
+    """Scan a directory and return total size of files in bytes"""
+    if path.is_file():
+        return path.stat().st_size
+    return sum(recursive_scan(item) for item in path.iterdir())
