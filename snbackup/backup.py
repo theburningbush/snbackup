@@ -145,11 +145,11 @@ def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern=
 
 def run_inspection(to_download: set) -> None:
     """Inspect current notes, determine what's new or changed, and log that out"""
-    logger.info('Inspecting changes only...')
+    logger.info('Inspecting changes only')
     if len(to_download) > 0:
         logger.info('New or updated files to download:')
     else:
-        logger.info('No new or updated files to download:')
+        logger.info('No new or updated files to download')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')

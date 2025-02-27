@@ -4,8 +4,21 @@ from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
 
-FOLDERS = {'note': 'Note', 'document': 'Document', 'export': 'EXPORT', 'mystyle': 'MyStyle', 'screenshot': 'SCREENSHOT', 'inbox': 'INBOX'}
-EXTS = '.note', '.pdf', '.epub', '.docx', '.doc', '.txt', '.png', '.jpg', '.jpeg', '.bmp', '.webp', '.cbz', '.fb2', '.xps', '.mobi'
+FOLDERS = {
+    'note': 'Note', 
+    'document': 'Document', 
+    'export': 'EXPORT', 
+    'mystyle': 'MyStyle', 
+    'screenshot': 'SCREENSHOT', 
+    'inbox': 'INBOX',
+}
+
+EXTS = {
+    '.note', '.pdf', '.epub', '.docx', '.doc', 
+    '.txt', '.png', '.jpg', '.jpeg', '.bmp', 
+    '.webp', '.cbz', '.fb2', '.xps', '.mobi',
+}
+
 CONFIG_ENV = os.getenv('SNBACKUP_CONF', Path().cwd().joinpath('config.json'))
 
 
