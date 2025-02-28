@@ -4,6 +4,8 @@ from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
 
+from .setup import HOME_CONF, CONFIG
+
 FOLDERS = {
     'note': 'Note', 
     'document': 'Document', 
@@ -19,11 +21,11 @@ EXTS = {
     '.webp', '.cbz', '.fb2', '.xps', '.mobi',
 }
 
-CONFIG_ENV = os.getenv('SNBACKUP_CONF', Path().cwd().joinpath('config.json'))
+CONFIG_ENV = os.getenv('SNBACKUP_CONF', HOME_CONF)
 
 
 def user_input() -> Namespace:
-    parser = ArgumentParser()
+    parser = ArgumentParser(allow_abbrev=False)
     parser.add_argument('-c', '--config', type=Path, default=CONFIG_ENV, help='Path to config.json file')
     parser.add_argument('-f', '--full', action='store_true', help='Download all notes and files from device. Disregard any saved locally.')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
@@ -47,18 +49,26 @@ def user_input() -> Namespace:
         const=10,
         help='Remove locally stored previous backups. Keeps last 10 or any supplied number.',
     )
+    parser.add_argument('--setup', action='store_true', help='Setup option to create a json config')
     return parser.parse_args()
 
 
-def load_config(config_pth: Path) -> dict:
+def load_config(config_pth: Path) -> tuple[Path, dict]:
     """Load in json config file"""
+    print(config_pth, config_pth.is_file())
+    if not config_pth.is_file():
+        # Last resort look for valid config in current directory
+        config_pth = Path().cwd().joinpath(CONFIG)
+
     try:
         with open(config_pth) as config_in:
-            return json.load(config_in)
+            config_dict = json.load(config_in)
     except FileNotFoundError:
         raise SystemExit(f'Required json config file not found at {config_pth!s}.')
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
+    
+    return config_pth, config_dict
 
 
 def today_pth(save_dir: Path) -> Path:

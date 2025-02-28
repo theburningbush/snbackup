@@ -8,8 +8,10 @@ import httpx
 
 from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
-from .helpers import (EXTS, FOLDERS, user_input, check_version, today_pth, 
-                      load_config, bytes_to_mb, count_backups, recursive_scan)
+from .helpers import (
+    EXTS, FOLDERS, user_input, check_version, today_pth, 
+    load_config, bytes_to_mb, count_backups, recursive_scan
+)
 
 
 def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> None:
@@ -98,8 +100,7 @@ def previous_record_gen(json_md: Path, *, previous=None):
         with open(json_md) as json_in:
             previous = json.loads(json_in.read())
     except FileNotFoundError:
-        logger.warning('Unable to locate note metadata file')
-        logger.info('Creating new file')
+        logger.warning('Unable to locate metadata file. Creating new file')
     except json.JSONDecodeError:
         logger.warning('Unable to decode json in metadata file')
     finally:
@@ -147,9 +148,9 @@ def run_inspection(to_download: set) -> None:
     """Inspect current notes, determine what's new or changed, and log that out"""
     logger.info('Inspecting changes only')
     if len(to_download) > 0:
-        logger.info('New or updated files to download:')
+        logger.info('Listing new or updated files to download:')
     else:
-        logger.info('No new or updated files to download')
+        logger.info('No new or updated files to download.')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')
@@ -162,7 +163,17 @@ def backup() -> None:
     if args.version:
         raise SystemExit(check_version('snbackup'))
 
-    config = load_config(args.config)
+    if args.setup:
+        from .setup import SetupConf, HOME_CONF  # Lazy import
+        setup = SetupConf()
+        setup.prompt()
+        setup.write_config()
+        print(f'Config file created at {HOME_CONF}')
+        print('Setup complete.')
+        print('Run "snbackup -i" to inspect downloads or "snbackup" to start backup process.')
+        raise SystemExit()
+
+    c_path, config = load_config(args.config)
     try:
         save_dir = config['save_dir']
         device_url = config['device_url']
@@ -185,6 +196,7 @@ def backup() -> None:
         logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
         raise SystemExit()
 
+    logger.info(f'Loaded config from {c_path}')
     logger.info(f'Device at {device_url}')
 
     if args.upload:
@@ -206,13 +218,17 @@ def backup() -> None:
 
     today = today_pth(save_dir)
 
-    todays_files = {SnFiles(today, uri, mdate, size) 
-                    for uri, mdate, size 
-                    in device_uri_gen(device_url, all_files)}
+    todays_files = {
+        SnFiles(today, uri, mdate, size) 
+        for uri, mdate, size 
+        in device_uri_gen(device_url, all_files)
+    }
 
-    previous_files = {SnFiles(Path(loc), uri, mod, fsize) 
-                      for loc, uri, mod, fsize 
-                      in previous_record_gen(json_md_file)}
+    previous_files = {
+        SnFiles(Path(loc), uri, mod, fsize) 
+        for loc, uri, mod, fsize 
+        in previous_record_gen(json_md_file)
+    }
 
     for deleted_note in check_for_deleted(todays_files, previous_files):
         previous_files.discard(deleted_note)
