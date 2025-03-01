@@ -10,7 +10,7 @@ from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
     EXTS, FOLDERS, user_input, check_version, today_pth, 
-    load_config, bytes_to_mb, count_backups, recursive_scan
+    load_config, bytes_to_mb, count_backups, recursive_scan, locate_config
 )
 
 
@@ -159,6 +159,7 @@ def run_inspection(to_download: set) -> None:
 def backup() -> None:
     """Main workflow logic"""
     args = user_input()
+    print(args)
 
     if args.version:
         raise SystemExit(check_version('snbackup'))
@@ -173,7 +174,12 @@ def backup() -> None:
         print('Run "snbackup -i" to inspect downloads or "snbackup" to start backup process.')
         raise SystemExit()
 
-    c_path, config = load_config(args.config)
+    if not args.config:
+        args.config = locate_config()
+        print(args.config)
+
+    config = load_config(args.config)
+    
     try:
         save_dir = config['save_dir']
         device_url = config['device_url']
@@ -196,7 +202,7 @@ def backup() -> None:
         logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
         raise SystemExit()
 
-    logger.info(f'Loaded config from {c_path}')
+    # logger.info(f'Loaded config from {c_path}')
     logger.info(f'Device at {device_url}')
 
     if args.upload:

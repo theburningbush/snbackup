@@ -34,7 +34,7 @@ def test_user_input():
     )
     
     zero_args_results = (
-        Path().home().joinpath('.config/snbackup/config.json'), False, False, 
+        None, False, False, 
         None, 'document', False, False, list(helpers.FOLDERS.values()), None, False
     )
     
@@ -54,8 +54,7 @@ def test_load_config():
         temp.write(json.dumps(config_dict))
         temp.flush() 
         pth = Path(temp.name)
-        _, load_conf_results = helpers.load_config(pth)
-        assert load_conf_results == config_dict
+        assert helpers.load_config(pth) == config_dict
 
         temp.seek(0)
         temp.write(json.dumps('JUNK1Z$:$((]]:')) 
@@ -64,10 +63,9 @@ def test_load_config():
             helpers.load_config(pth)
         assert f'Check your config at {temp.name}' in str(exc_info.value)
 
-    # Taking this out while I rethink this test
-    # with pytest.raises(SystemExit) as exc_info:  
-    #     helpers.load_config(pth)  
-    # assert f'file not found at' in str(exc_info)
+    with pytest.raises(SystemExit) as exc_info:  
+        helpers.load_config(pth)  
+    assert f'file not found at' in str(exc_info)
 
 
 def test_today_path():

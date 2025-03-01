@@ -68,7 +68,7 @@ class SetupConf:
             print(f'Invalid IPv4 address: {addr}')
             raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
 
-    def _create_folders(self, folder) -> None:
+    def _create_folders(self, *, folder) -> None:
         """Create save and config folders as needed"""
         try:
             if folder == 'save':

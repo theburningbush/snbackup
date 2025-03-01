@@ -21,12 +21,10 @@ EXTS = {
     '.webp', '.cbz', '.fb2', '.xps', '.mobi',
 }
 
-CONFIG_ENV = os.getenv('SNBACKUP_CONF', HOME_CONF)
-
 
 def user_input() -> Namespace:
     parser = ArgumentParser(allow_abbrev=False)
-    parser.add_argument('-c', '--config', type=Path, default=CONFIG_ENV, help='Path to config.json file')
+    parser.add_argument('-c', '--config', type=Path, help='Path to config.json file')
     parser.add_argument('-f', '--full', action='store_true', help='Download all notes and files from device. Disregard any saved locally.')
     parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
     parser.add_argument('-u', '--upload', nargs='+', help='Send one or more files to device. "snbackup -u file1 file2 file3"')
@@ -53,13 +51,16 @@ def user_input() -> Namespace:
     return parser.parse_args()
 
 
-def load_config(config_pth: Path) -> tuple[Path, dict]:
-    """Load in json config file"""
-    print(config_pth, config_pth.is_file())
-    if not config_pth.is_file():
-        # Last resort look for valid config in current directory
-        config_pth = Path().cwd().joinpath(CONFIG)
+def locate_config() -> Path:
+    for conf in (os.getenv('SNBACKUP_CONF', HOME_CONF), Path().cwd().joinpath(CONFIG)):
+        pth = Path(conf)
+        if pth.is_file():
+            return pth
+    raise SystemExit('Required json config file cannot be found.')
 
+
+def load_config(config_pth: Path) -> dict:
+    """Deserialize json config file"""
     try:
         with open(config_pth) as config_in:
             config_dict = json.load(config_in)
@@ -67,8 +68,7 @@ def load_config(config_pth: Path) -> tuple[Path, dict]:
         raise SystemExit(f'Required json config file not found at {config_pth!s}.')
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
-    
-    return config_pth, config_dict
+    return config_dict
 
 
 def today_pth(save_dir: Path) -> Path:
