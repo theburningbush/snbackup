@@ -52,9 +52,14 @@ def user_input() -> Namespace:
 
 
 def locate_config() -> Path:
-    for conf in (os.getenv('SNBACKUP_CONF', SetupConf.home), Path().cwd().joinpath(SetupConf.config)):
+    conf_locations = (
+        os.getenv('SNBACKUP_CONF'), 
+        SetupConf.home, 
+        Path().cwd().joinpath(SetupConf.config)
+    )
+    for conf in conf_locations:
         pth = Path(conf)
-        if pth.is_file():
+        if pth.is_file() and pth.stem == '.json':
             return pth
     raise SystemExit('Required json config file cannot be found.')
 
