@@ -9,8 +9,8 @@ import httpx
 from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
-    EXTS, FOLDERS, user_input, check_version, today_pth, 
-    load_config, bytes_to_mb, count_backups, recursive_scan, locate_config
+    EXTS, FOLDERS, user_input, check_version, today_pth, load_config,
+    bytes_to_mb, count_backups, recursive_scan, locate_config
 )
 
 
@@ -159,27 +159,26 @@ def run_inspection(to_download: set) -> None:
 def backup() -> None:
     """Main workflow logic"""
     args = user_input()
-    print(args)
+    # print(args)
 
     if args.version:
         raise SystemExit(check_version('snbackup'))
 
     if args.setup:
-        from .setup import SetupConf, HOME_CONF  # Lazy import
+        from .setup import SetupConf  # Lazy import
         setup = SetupConf()
         setup.prompt()
         setup.write_config()
-        print(f'Config file created at {HOME_CONF}')
+        print(f'Config file created at {setup.home}')
         print('Setup complete.')
         print('Run "snbackup -i" to inspect downloads or "snbackup" to start backup process.')
         raise SystemExit()
 
     if not args.config:
         args.config = locate_config()
-        print(args.config)
 
     config = load_config(args.config)
-    
+
     try:
         save_dir = config['save_dir']
         device_url = config['device_url']
@@ -191,9 +190,14 @@ def backup() -> None:
     truncate = config.get('truncate_log', 1000)
 
     save_dir = Path(save_dir)
+    if not save_dir.is_dir():
+        raise SystemExit(f'Unable to locate or write to {save_dir}')
+    
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
+
+    logger.info(f'Loaded config {args.config}')
 
     if args.list:
         num, oldest, latest = count_backups(save_dir)
@@ -202,7 +206,6 @@ def backup() -> None:
         logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
         raise SystemExit()
 
-    # logger.info(f'Loaded config from {c_path}')
     logger.info(f'Device at {device_url}')
 
     if args.upload:

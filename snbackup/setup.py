@@ -3,14 +3,14 @@ import re
 import json
 from pathlib import Path
 
-CONFIG = 'config.json'
-HOME_CONF = Path().home().joinpath(f'.config/snbackup/{CONFIG}')
-
 
 class SetupConf:
     """Assist in setting up a config file for application"""
 
-    def __init__(self, conf_type='json') -> None:
+    config = 'config.json'
+    home = Path().home().joinpath(f'.config/snbackup/{config}')
+
+    def __init__(self) -> None:
         self.save = Path().home().joinpath('Documents/Supernote')
         self.port = '8089'
     
@@ -75,8 +75,8 @@ class SetupConf:
                 if not self.save.exists():
                     self.save.mkdir(parents=True)
             else:
-                if not HOME_CONF.parent.exists():
-                    HOME_CONF.parent.mkdir(parents=True)
+                if not self.home.parent.exists():
+                    self.home.parent.mkdir(parents=True)
         except PermissionError as e:
             raise SystemExit(f'Unable to create folders due to OS permissions: {e}')
         except OSError as e:
@@ -92,7 +92,7 @@ class SetupConf:
     def write_config(self) -> None:
         self._create_folders(folder='save')
         self._create_folders(folder='config')
-        with open(HOME_CONF, 'wt') as config:
+        with open(self.home, 'wt') as config:
             json.dump(self._construct(), config, indent=4)
             
         

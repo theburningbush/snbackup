@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import date
 from argparse import ArgumentParser, Namespace
 
-from .setup import HOME_CONF, CONFIG
+from .setup import SetupConf
 
 FOLDERS = {
     'note': 'Note', 
@@ -52,7 +52,7 @@ def user_input() -> Namespace:
 
 
 def locate_config() -> Path:
-    for conf in (os.getenv('SNBACKUP_CONF', HOME_CONF), Path().cwd().joinpath(CONFIG)):
+    for conf in (os.getenv('SNBACKUP_CONF', SetupConf.home), Path().cwd().joinpath(SetupConf.config)):
         pth = Path(conf)
         if pth.is_file():
             return pth
