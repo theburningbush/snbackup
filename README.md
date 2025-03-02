@@ -1,20 +1,20 @@
 ## Command line utility to wirelessly backup files from a Supernote device
 
-The primary goal of this project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format. 
+The primary goal of this `snbackup` project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format.  
 
 This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this application will break.  
 
 Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)  
 
-### Setup Process:
+### Setup Process:  
 
-1. Install Python 3.10 or newer along with pip
+1. Install Python 3.10 or newer and then install package with `pip install snbackup`. You could also use `pipx` or `uv` to make it globally available on your system.  
 
-2. Setup your Python virtual environment and install with `pip install snbackup`. You could also use `pipx` or `uv` to make it globally available on your system.
+2. Create a folder somewhere on your computer to store your Supernote backups.  
 
-3. Create a folder somewhere on your computer to store your Supernote backups.
-
-4. **IMPORTANT:** Create a file called `config.json` or edit and use the one provided with this project. This file is **_required_** to determine where to save your backups and where to access the device on the network. For example, I place my config file in the same directory as my backups.  
+3. **IMPORTANT:** Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
+    1. Run `snbackup --setup` to run a user prompted setup for your chosen backup directory, device IP address, and device port number. This will save your _config.json_ to a _.config_ folder within your home directory. The program will look for this config file automatically when it runs.  
+    2. Manually create the _config.json_ file. Copy and paste from the example below and tweak as needed. Place this file in your chosen backup directory from step **2**.  
 
 #### Example config.json (must contain _save_dir_ and _device_url_):  
 ```
@@ -24,17 +24,17 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
 }
 ```
 
-5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on  
+5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on.  
 
-6. There are three main ways to run the `snbackup` tool from your terminal or command line:
-    - This will look for the required **_config.json_** from step **4** in your current working directory:  
-    `snbackup` 
+6. There are three main ways to run the `snbackup` tool from your terminal or command line:  
+    - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
+    `snbackup`  
 
-    - This optionally specifies the location of the required **_config.json_** file:  
+    - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
     `snbackup -c /the/path/to/config.json`  
 
-    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_** and then run `snbackup` from any directory without needing to specify the config location.  
-    `export SNBACKUP_CONF="/path/to/config.json"`
+    - You can also set an environment variable called `SNBACKUP_CONF` which points to the location of the **_config.json_** and run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
+    `export SNBACKUP_CONF="/path/to/config.json"`  
 
 ---
 
@@ -68,11 +68,14 @@ The accepted file formats for the upload are **.note, .pdf, .epub, .docx, .doc, 
 - Inspect new files to be downloaded from device and but do not download:  
 `snbackup -i`  
 
+- List out information for backups found locally:  
+`snbackup -ls`  
+
 - The full backup flag will ignore previously saved backups and force the tool to redownload everything from device:  
-`snbackup -f`
+`snbackup -f`  
 
 - Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones:  
-`snbackup --cleanup 5`
+`snbackup --cleanup 5`  
 
 - Print program version:  
 `snbackup -v`  

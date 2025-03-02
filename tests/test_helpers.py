@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 
 import pytest
 
-from snbackup import helpers, setup
+from snbackup import helpers
 
 
 class ArgvSwitcher:
