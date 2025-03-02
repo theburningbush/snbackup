@@ -65,10 +65,10 @@ The accepted file formats for the upload are **.note, .pdf, .epub, .docx, .doc, 
 - Show all available command line options:  
 `snbackup -h`  
 
-- Inspect new files to be downloaded from device and but do not download:  
+- Inspect new files to be downloaded from device but do not download:  
 `snbackup -i`  
 
-- List out information for backups found locally:  
+- List out date and size information for backups found locally:  
 `snbackup -ls`  
 
 - The full backup flag will ignore previously saved backups and force the tool to redownload everything from device:  
@@ -81,7 +81,7 @@ The accepted file formats for the upload are **.note, .pdf, .epub, .docx, .doc, 
 `snbackup -v`  
 
 ---  
-There are additional configuration options that can be set in the config.json file.  
+### There are additional configuration options that can be set in the config.json file.  
 ```
 {
     "save_dir": "/Users/devin/Documents/Supernote",
