@@ -27,13 +27,13 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
 5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on.  
 
 6. There are three main ways to run the `snbackup` tool from your terminal or command line:  
-    - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
+    1. This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
     `snbackup`  
 
-    - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
+    2. Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
     `snbackup -c /the/path/to/config.json`  
 
-    - You can also set an environment variable called `SNBACKUP_CONF` which points to the location of the **_config.json_** and run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
+    3. You can also set an environment variable called `SNBACKUP_CONF` which points to the location of the **_config.json_** and run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
     `export SNBACKUP_CONF="/path/to/config.json"`  
 
 ---
