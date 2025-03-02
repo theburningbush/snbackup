@@ -61,7 +61,7 @@ def locate_config() -> Path:
         pth = Path(conf)
         if pth.is_file() and pth.stem == '.json':
             return pth
-    raise SystemExit('Required json config file cannot be found.')
+    raise SystemExit(f'Required json config file cannot be found. {pth}')
 
 
 def load_config(config_pth: Path) -> dict:
