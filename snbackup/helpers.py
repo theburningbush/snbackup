@@ -53,15 +53,15 @@ def user_input() -> Namespace:
 
 def locate_config() -> Path:
     conf_locations = (
-        os.getenv('SNBACKUP_CONF'), 
-        SetupConf.home, 
+        os.getenv('SNBACKUP_CONF', ''), 
+        SetupConf.home_conf, 
         Path().cwd().joinpath(SetupConf.config)
     )
     for conf in conf_locations:
         pth = Path(conf)
-        if pth.is_file() and pth.stem == '.json':
+        if pth.is_file() and pth.suffix == '.json':
             return pth
-    raise SystemExit(f'Required json config file cannot be found. {pth}')
+    raise SystemExit(f'Required json config file cannot be found.')
 
 
 def load_config(config_pth: Path) -> dict:
@@ -69,9 +69,9 @@ def load_config(config_pth: Path) -> dict:
     try:
         with open(config_pth) as config_in:
             config_dict = json.load(config_in)
-    except FileNotFoundError:
+    except (FileNotFoundError, IsADirectoryError):
         raise SystemExit(f'Required json config file not found at {config_pth!s}.')
-    except (json.JSONDecodeError, UnicodeDecodeError):
+    except (UnicodeDecodeError, json.JSONDecodeError):
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
     return config_dict
 

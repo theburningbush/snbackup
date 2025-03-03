@@ -169,7 +169,7 @@ def backup() -> None:
         setup = SetupConf()
         setup.prompt()
         setup.write_config()
-        print(f'Config file created at {setup.home}')
+        print(f'Config file created at {setup.home_conf}')
         print('Setup complete.')
         print('Run "snbackup -i" to inspect downloads or "snbackup" to start backup process.')
         raise SystemExit()

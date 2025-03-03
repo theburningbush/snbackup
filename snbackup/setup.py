@@ -8,7 +8,7 @@ class SetupConf:
     """Assist in setting up a config file for application"""
 
     config = 'config.json'
-    home = Path().home().joinpath(f'.config/snbackup/{config}')
+    home_conf = Path().home().joinpath(f'.config/snbackup/{config}')
 
     def __init__(self) -> None:
         self.save = Path().home().joinpath('Documents/Supernote')
@@ -75,8 +75,8 @@ class SetupConf:
                 if not self.save.exists():
                     self.save.mkdir(parents=True)
             else:
-                if not self.home.parent.exists():
-                    self.home.parent.mkdir(parents=True)
+                if not self.home_conf.parent.exists():
+                    self.home_conf.parent.mkdir(parents=True)
         except PermissionError as e:
             raise SystemExit(f'Unable to create folders due to OS permissions: {e}')
         except OSError as e:
@@ -92,7 +92,7 @@ class SetupConf:
     def write_config(self) -> None:
         self._create_folders(folder='save')
         self._create_folders(folder='config')
-        with open(self.home, 'wt') as config:
+        with open(self.home_conf, 'wt') as config:
             json.dump(self._construct(), config, indent=4)
             
         
