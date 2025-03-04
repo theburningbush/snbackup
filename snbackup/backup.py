@@ -8,8 +8,10 @@ import httpx
 
 from .files import SnFiles
 from .utilities import CustomLogger, truncate_log
-from .helpers import (EXTS, FOLDERS, user_input, check_version, today_pth, 
-                      load_config, bytes_to_mb, count_backups, recursive_scan)
+from .helpers import (
+    EXTS, FOLDERS, user_input, check_version, today_pth, load_config,
+    bytes_to_mb, count_backups, recursive_scan, locate_config
+)
 
 
 def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> None:
@@ -98,8 +100,7 @@ def previous_record_gen(json_md: Path, *, previous=None):
         with open(json_md) as json_in:
             previous = json.loads(json_in.read())
     except FileNotFoundError:
-        logger.warning('Unable to locate note metadata file')
-        logger.info('Creating new file')
+        logger.warning('Unable to locate metadata file. Creating new file')
     except json.JSONDecodeError:
         logger.warning('Unable to decode json in metadata file')
     finally:
@@ -132,9 +133,9 @@ def upload_files(url: str, to_upload: list, destination: str) -> str | None:
     return 'Upload complete' if response else None
 
 
-def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern='202?-*') -> None:
+def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='202?-*') -> None:
     """Delete old backups from the backup save directory on local disk"""
-    if num_backups and cleanup:
+    if num_backups > 0 and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
         previous_folders = sorted(base_dir.glob(pattern), reverse=True)
         while len(previous_folders) > num_backups:
@@ -145,11 +146,11 @@ def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern=
 
 def run_inspection(to_download: set) -> None:
     """Inspect current notes, determine what's new or changed, and log that out"""
-    logger.info('Inspecting changes only...')
+    logger.info('Inspecting changes only')
     if len(to_download) > 0:
-        logger.info('New or updated files to download:')
+        logger.info('Listing new or updated files to download:')
     else:
-        logger.info('No new or updated files to download:')
+        logger.info('No new or updated files to download.')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')
@@ -158,25 +159,45 @@ def run_inspection(to_download: set) -> None:
 def backup() -> None:
     """Main workflow logic"""
     args = user_input()
+    # print(args)
 
     if args.version:
         raise SystemExit(check_version('snbackup'))
 
+    if args.setup:
+        from .setup import SetupConf  # Lazy import
+        setup = SetupConf()
+        setup.prompt()
+        setup.write_config()
+        print(f'Config file created at {setup.home_conf}')
+        print('Setup complete.')
+        print('Run "snbackup -i" to inspect downloads or "snbackup" to start backup process.')
+        raise SystemExit()
+
+    if not args.config:
+        args.config = locate_config()
+
     config = load_config(args.config)
+
     try:
         save_dir = config['save_dir']
         device_url = config['device_url']
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
-    num_backups = config.get('num_backups')
+    num_backups = config.get('num_backups', 0)
     cleanup = config.get('cleanup', False)
     truncate = config.get('truncate_log', 1000)
 
     save_dir = Path(save_dir)
+    if not save_dir.is_dir():
+        raise SystemExit(f'Unable to locate or write to {save_dir}')
+    
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
+
+    logger.info(f'Loaded config {args.config}')
 
     if args.list:
         num, oldest, latest = count_backups(save_dir)
@@ -206,13 +227,17 @@ def backup() -> None:
 
     today = today_pth(save_dir)
 
-    todays_files = {SnFiles(today, uri, mdate, size) 
-                    for uri, mdate, size 
-                    in device_uri_gen(device_url, all_files)}
+    todays_files = {
+        SnFiles(today, uri, mdate, size) 
+        for uri, mdate, size 
+        in device_uri_gen(device_url, all_files)
+    }
 
-    previous_files = {SnFiles(Path(loc), uri, mod, fsize) 
-                      for loc, uri, mod, fsize 
-                      in previous_record_gen(json_md_file)}
+    previous_files = {
+        SnFiles(Path(loc), uri, mod, fsize) 
+        for loc, uri, mod, fsize 
+        in previous_record_gen(json_md_file)
+    }
 
     for deleted_note in check_for_deleted(todays_files, previous_files):
         previous_files.discard(deleted_note)

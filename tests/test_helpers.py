@@ -22,24 +22,30 @@ class ArgvSwitcher:
 
 
 def test_user_input():
-    all_args = ['-c', 'path/to/test_config.json', '-f', 
-                '-i', '-u', 'file1', '-d', 'note', '-ls',
-                '-v', '--notes', '--cleanup']
+    all_args = [
+        '-c', 'path/to/test_config.json', '-f', 
+        '-i', '-u', 'file1', '-d', 'note', '-ls',
+        '-v', '--notes', '--cleanup', '--setup'
+    ]
     
-    all_args_results = (Path('path/to/test_config.json'), True, 
-                      True, ['file1'], 'note', True, True, ['Note'], 10)
+    all_args_results = (
+        Path('path/to/test_config.json'), True, True,
+        ['file1'], 'note', True, True, ['Note'], 10, True
+    )
     
-    zero_args_results = (Path().cwd().joinpath('config.json'), False, False, 
-                         None, 'document', False, False, list(helpers.FOLDERS.values()), None)
+    zero_args_results = (
+        None, False, False, 
+        None, 'document', False, False, list(helpers.FOLDERS.values()), None, False
+    )
     
     with ArgvSwitcher(sys.argv):
         sys.argv[1:] = all_args
         ns = helpers.user_input()  # Namespace
-        assert (ns.config, ns.full, ns.inspect, ns.upload, ns.destination, ns.list, ns.version, ns.notes, ns.cleanup) == all_args_results
+        assert (ns.config, ns.full, ns.inspect, ns.upload, ns.destination, ns.list, ns.version, ns.notes, ns.cleanup, ns.setup) == all_args_results
 
         sys.argv = ['']
         ns = helpers.user_input()
-        assert (ns.config, ns.full, ns.inspect, ns.upload, ns.destination, ns.list, ns.version, ns.notes, ns.cleanup) == zero_args_results
+        assert (ns.config, ns.full, ns.inspect, ns.upload, ns.destination, ns.list, ns.version, ns.notes, ns.cleanup, ns.setup) == zero_args_results
 
 
 def test_load_config():
