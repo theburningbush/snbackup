@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snbackup"
-version = "2.0.3"
+version = "2.1.0"
 authors = [
   { name="devdevindev", email="devinwrx@gmail.com" },
 ]
@@ -22,7 +22,8 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "httpx"
+    "httpx",
+    "rich"
 ]
 
 [project.optional-dependencies]

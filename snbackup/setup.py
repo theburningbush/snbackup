@@ -3,6 +3,7 @@ import re
 import json
 from pathlib import Path
 
+from rich.prompt import Prompt
 
 class SetupConf:
     """Assist in setting up a config file for application"""
@@ -21,23 +22,25 @@ class SetupConf:
         try:
             print(' SETUP '.center(50, '='))
             print('Where do you want to save your Supernote backups?')
-            print(f'Default location is {self.save}')
-            self.save = input()
+            # print(f'Default location is {self.save}')
+            self.save = Prompt.ask('Default:', default=f'{self.save}')
             print('Connect to WiFi and enable Browse & Access on your device.')
-            print('Enter the IP address for your Supernote device. For example, 192.168.1.105')
-            self.ip = input()
-            print(f'Enter the device port number. Default port is {self.port}')
-            self.port = input()
+            print('Enter the IP address for your Supernote device.')
+            self.ip = Prompt.ask('Example 192.168.1.105',)
+            print(f'Enter the device port number.')
+            self.port = Prompt.ask('Default:', default=self.port)
             print('How many backups would you like to keep locally?')
             print('For example, 5 will keep only the five most recent backups.')
-            print('Default is 0 (unlimited backups)')
-            self.backups = input()
+            print('Enter 0 for unlimited backups')
+            self.backups = Prompt.ask('Default', default='0')
             print(' CONFIRM '.center(50, '='))
-            print(f'Backing up Supernote files to {self.save}')
-            print(f'Device URL is {self.url}')
+            print(f'- Backing up Supernote files to {self.save}')
+            print(f'- Device URL is {self.url}')
             if self.backups > 0:
-                print(f'Will keep only {self.backups} most recent backups.')
-            choice = input('Press Y to confirm or N to cancel: ')
+                print(f'- Will keep only {self.backups} most recent backups.')
+            else:
+                print('- Will not delete any previous backups.')
+            choice = Prompt.ask('Confirm configuration:', choices=['Y', 'N'], case_sensitive=False)
             if choice.strip().upper() != 'Y':
                 raise SystemExit('Canceling setup')
         except KeyboardInterrupt:
@@ -80,7 +83,7 @@ class SetupConf:
         expr = r'^(\d{1,3}\.){3}\d{1,3}$'
         if not re.match(expr, addr):
             self._ip = 'x.x.x.x'
-            print(f'Invalid IPv4 address: {addr}')
+            print(f'Invalid or empty IPv4 address {addr}')
             raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
         self._ip = addr
 
