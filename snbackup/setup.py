@@ -13,6 +13,8 @@ class SetupConf:
     def __init__(self) -> None:
         self.save = Path().home().joinpath('Documents/Supernote')
         self.port = '8089'
+        self.backups = 0
+        self.cleanup = False
     
     def prompt(self) -> None:
         """Collect user input"""
@@ -22,17 +24,19 @@ class SetupConf:
             print(f'Default location is {self.save}')
             self.save = input()
             print('Connect to WiFi and enable Browse & Access on your device.')
-            print('Enter the IP address for your Supernote device. For example 192.168.1.105')
+            print('Enter the IP address for your Supernote device. For example, 192.168.1.105')
             self.ip = input()
-            print(f'Enter the device port number. Default is port {self.port}')
+            print(f'Enter the device port number. Default port is {self.port}')
             self.port = input()
             print('How many backups would you like to keep locally?')
-            print('For example 5 will keep only the five most recent backups.')
+            print('For example, 5 will keep only the five most recent backups.')
             print('Default is 0 (unlimited backups)')
             self.backups = input()
             print(' CONFIRM '.center(50, '='))
             print(f'Backing up Supernote files to {self.save}')
             print(f'Device URL is {self.url}')
+            if self.backups > 0:
+                print(f'Will keep only {self.backups} most recent backups.')
             choice = input('Press Y to confirm or N to cancel: ')
             if choice.strip().upper() != 'Y':
                 raise SystemExit('Canceling setup')
@@ -80,6 +84,18 @@ class SetupConf:
             raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
         self._ip = addr
 
+    @property
+    def backups(self) -> int:
+        return self._backups
+
+    @backups.setter
+    def backups(self, num: str) -> None:
+        try:
+            num = int(num)
+        except ValueError:
+            num = 0
+        self.cleanup = True if num > 0 else False
+        self._backups = 0 if num <= 0 else num
 
     def _create_folders(self, *, folder: str) -> None:
         """Create save and config folders as needed"""
@@ -100,6 +116,8 @@ class SetupConf:
         return {
             'save_dir': str(self.save),
             'device_url': self.url,
+            'num_backups': self.backups,
+            'cleanup': self.cleanup,
         }
 
     def write_config(self) -> None:

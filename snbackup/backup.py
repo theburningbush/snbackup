@@ -133,9 +133,9 @@ def upload_files(url: str, to_upload: list, destination: str) -> str | None:
     return 'Upload complete' if response else None
 
 
-def cleanup_backups(base_dir: Path, *, num_backups=None, cleanup=False, pattern='202?-*') -> None:
+def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='202?-*') -> None:
     """Delete old backups from the backup save directory on local disk"""
-    if num_backups and cleanup:
+    if num_backups > 0 and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
         previous_folders = sorted(base_dir.glob(pattern), reverse=True)
         while len(previous_folders) > num_backups:
@@ -185,7 +185,7 @@ def backup() -> None:
     except KeyError:
         raise SystemExit('Unable to find "save_dir" or "device_url" in config.json file')
 
-    num_backups = config.get('num_backups')
+    num_backups = config.get('num_backups', 0)
     cleanup = config.get('cleanup', False)
     truncate = config.get('truncate_log', 1000)
 
