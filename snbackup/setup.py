@@ -22,9 +22,8 @@ class SetupConf:
         try:
             print(' SETUP '.center(50, '='))
             print('Where do you want to save your Supernote backups?')
-            # print(f'Default location is {self.save}')
             self.save = Prompt.ask('Default:', default=f'{self.save}')
-            print('Connect to WiFi and enable Browse & Access on your device.')
+            print('Connect your Supernote to WiFi and enable Browse & Access.')
             print('Enter the IP address for your Supernote device.')
             self.ip = Prompt.ask('Example 192.168.1.105',)
             print(f'Enter the device port number.')
