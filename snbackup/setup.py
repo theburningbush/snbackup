@@ -94,8 +94,7 @@ class SetupConf:
             num = int(num)
         except ValueError:
             num = 0
-        self.cleanup = True if num > 0 else False
-        self._backups = 0 if num <= 0 else num
+        self._backups, self.cleanup = (num, True) if num > 0 else (0, False)
 
     def _create_folders(self, *, folder: str) -> None:
         """Create save and config folders as needed"""
