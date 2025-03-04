@@ -17,28 +17,34 @@ class SetupConf:
     def prompt(self) -> None:
         """Collect user input"""
         try:
+            print(' SETUP '.center(50, '='))
             print('Where do you want to save your Supernote backups?')
             print(f'Default location is {self.save}')
             self.save = input()
-            print('Connect to WiFi and enable Browse & Access on you device.')
+            print('Connect to WiFi and enable Browse & Access on your device.')
             print('Enter the IP address for your Supernote device. For example 192.168.1.105')
             self.ip = input()
             print(f'Enter the device port number. Default is port {self.port}')
             self.port = input()
+            print('How many backups would you like to keep locally?')
+            print('For example 5 will keep only the five most recent backups.')
+            print('Default is 0 (unlimited backups)')
+            self.backups = input()
+            print(' CONFIRM '.center(50, '='))
             print(f'Backing up Supernote files to {self.save}')
             print(f'Device URL is {self.url}')
             choice = input('Press Y to confirm or N to cancel: ')
             if choice.strip().upper() != 'Y':
-                raise SystemExit('Aborting setup')
+                raise SystemExit('Canceling setup')
         except KeyboardInterrupt:
-            raise SystemExit(' Aborting setup')
+            raise SystemExit(' Canceling setup')
 
     @property
     def save(self) -> Path:
         return self._save
     
     @save.setter
-    def save(self, save_dir) -> None:
+    def save(self, save_dir: str) -> None:
         self._save = Path(save_dir) if save_dir else self.save
 
     @property
@@ -46,8 +52,15 @@ class SetupConf:
         return self._port
     
     @port.setter
-    def port(self, device_port) -> None:
-        self._port = device_port or self.port
+    def port(self, device_port: str) -> None:
+        if device_port == '':
+            return None
+
+        expr = r'^\d{2,5}$'
+        if not re.match(expr, device_port):
+            print(f'Invalid device port: {device_port}')
+            raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
+        self._port = device_port
 
     @property
     def url(self) -> str:
@@ -61,14 +74,14 @@ class SetupConf:
     def ip(self, addr: str) -> None:
         # Good enough IPv4 validation
         expr = r'^(\d{1,3}\.){3}\d{1,3}$'
-        if re.match(expr, addr):
-            self._ip = addr
-        else:
+        if not re.match(expr, addr):
             self._ip = 'x.x.x.x'
             print(f'Invalid IPv4 address: {addr}')
             raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
+        self._ip = addr
 
-    def _create_folders(self, *, folder) -> None:
+
+    def _create_folders(self, *, folder: str) -> None:
         """Create save and config folders as needed"""
         try:
             if folder == 'save':

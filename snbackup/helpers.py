@@ -52,6 +52,7 @@ def user_input() -> Namespace:
 
 
 def locate_config() -> Path:
+    """Look in potential config locations and return first valid"""
     conf_locations = (
         os.getenv('SNBACKUP_CONF', ''), 
         SetupConf.home_conf, 
@@ -91,11 +92,13 @@ def bytes_to_mb(byte_size: int) -> str:
     return format(byte_size / 1000**2, '.2f')
 
 
-def count_backups(directory: Path, pattern='202?-*') -> tuple:
+def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
     """Counts number of backup folders and returns oldest and 
     newest found on local disk"""
 
     previous = sorted(directory.glob(pattern))
+    if not previous:
+        return 0, directory, directory
     return len(previous), previous[0], previous[-1]
 
 
