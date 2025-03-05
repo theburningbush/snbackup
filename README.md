@@ -48,7 +48,7 @@ The tool will make a new directory within your chosen `save_dir` folder for toda
 |:------------------------|:--------------------------------------------------------------|
 | `Note/Stuff/Ideas`      | `/save/directory/<YYYY-MM-DD>/Note/Stuff/Ideas.note`          |
 | `Note/note with spaces` | `/save/directory/<YYYY-MM-DD>/Note/note+with+spaces.note`     |
-| `Document/Random.pdf`   | `/save/directory/<YYYY-MM-DD>/Document/note+with+spaces.note` |
+| `Document/Random.pdf`   | `/save/directory/<YYYY-MM-DD>/Document/Random.pdf`            |
 
 > Backslashes `\` will be automatically converted to forward slashes `/` on Windows systems.
 
