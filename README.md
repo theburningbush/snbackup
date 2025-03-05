@@ -8,6 +8,13 @@ The primary goal of this project is to create a Python CLI tool to wirelessly ba
 
 This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this tool will break.  
 
+## Table of Contents
+- [Setup Process](#setup-process)
+- [Helpful Information](#helpful-information)
+- [Uploading](#uploading)
+- [Additional Options](#additional-options)
+- [Tips](#tips)
+
 ### Setup Process:  
 
 1. Install with `pip install snbackup` into your Python virtual environment. I prefer to use [pipx](https://pipx.pypa.io/stable/) to make it globally available on my system.  
@@ -44,7 +51,7 @@ The `snbackup` tool will attempt to connect to your device and download _all fil
 
 The tool will make a new directory within your chosen `save_dir` folder for today and save all files as they are found on the device:   
 
-| **Supernote Folder**    | **Local Save Directory**                                      |
+| **Supernote Path**    | **Local Save Directory**                                      |
 |:------------------------|:--------------------------------------------------------------|
 | `Note/Stuff/Ideas`      | `/save/directory/<YYYY-MM-DD>/Note/Stuff/Ideas.note`          |
 | `Note/note with spaces` | `/save/directory/<YYYY-MM-DD>/Note/note+with+spaces.note`     |
@@ -74,7 +81,7 @@ If no destination is specified after the `-d` flag the device Document folder is
 #### Accepted file extensions for uploads:
 | Category       | File Extensions                          |
 |----------------|------------------------------------------|
-| **Text/Note**  | `.txt`, `.note`                          |
+| **Note/Text**  | `.note`, `.txt`                          |
 | **Documents**  | `.pdf`, `.docx`, `.doc`, `.xps`          |
 | **eBooks**     | `.epub`, `.mobi`, `.fb2`, `.cbz`         |
 | **Images**     | `.png`, `.jpg`, `.jpeg`, `.bmp`, `.webp` |
@@ -115,3 +122,5 @@ By default the _snbackup.log_ file only keeps the last 1000 lines. This number c
 - If your Supernote device's IP address changes often on your local network, consider assigning it a static IP address. This can typically be done by logging into your router and configuring it there.  
 
 - Windows systems use the backslash character `\` as a separator for file paths. This is tricky for JSON files. Luckily, you can still use forward slashes `/` as shown in the example config.json even on Windows. However, you can also escape the backslashes if you prefer. For example your `save_dir` might look something like this `"C:\\Users\\devin\\My Documents\\Supernote"` on a Windows computer.  
+
+- I made this tool for me because I'm slightly paranoid about losing my written notes, thoughts, plans, brain dumps, etc... I'm open to feedback if you experience bugs or have any ideas for improvements.  
