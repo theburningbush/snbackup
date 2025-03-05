@@ -15,8 +15,8 @@ This tool will *probably* work on any of the Supernote devices running the most 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
 3. **IMPORTANT:** Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
-    1. Run `snbackup --setup` to run a prompted setup and supply your backup directory path, device IP address, and device port number. This will save your _config.json_ to a _.config_ folder within your home directory. The tool will look for this config file automatically when it runs.  
-    2. Manually create the _config.json_ file. Copy and paste from the example below and adjust as needed. Place this file in your chosen backup directory from step **2**.  
+    - Run `snbackup --setup` to run a prompted setup and supply your backup directory path, device IP address, and device port number. This will save your _config.json_ to a _.config_ folder within your home directory. The tool will look for this config file automatically when it runs.  
+    - Manually create the _config.json_ file. Copy and paste from the example below and adjust as needed. Place this file in your chosen backup directory from step **2**.  
 
 #### Example config.json (It must contain _save_dir_ and _device_url_):  
 ```json
@@ -26,16 +26,16 @@ This tool will *probably* work on any of the Supernote devices running the most 
 }
 ```
 
-5. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on.  
+4. Make sure the Supernote device is connected to WiFi with the Browse & Access feature turned on.  
 
-6. There are three main ways to run the `snbackup` tool from your terminal or command line:  
-    1. This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
+5. There are three main ways to run the `snbackup` tool from your terminal or command line:  
+    - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
     `snbackup`  
 
-    2. Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
+    - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
     `snbackup -c /the/path/to/config.json`  
 
-    3. You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
+    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
     `export SNBACKUP_CONF="/path/to/config.json"`  
 
 ---
