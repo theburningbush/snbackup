@@ -42,7 +42,7 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 The `snbackup` tool will attempt to connect to your device and download _all files_ it finds to the `save_dir` directory specified in your **_config.json_**. The first run may take a few minutes or more as it will attempt to download everything; subsequent runs only download new or modified files.  
 
-The tool will make a new directory within your chosen `save_dir` folder for today and save all files as they are found on the device.   
+The tool will make a new directory within your chosen `save_dir` folder for today and save all files as they are found on the device:   
 
 | **Supernote Folder**    | **Local Save Directory**                                      |
 |:------------------------|:--------------------------------------------------------------|
@@ -50,7 +50,7 @@ The tool will make a new directory within your chosen `save_dir` folder for toda
 | `Note/note with spaces` | `/save/directory/<YYYY-MM-DD>/Note/note+with+spaces.note`     |
 | `Document/Random.pdf`   | `/save/directory/<YYYY-MM-DD>/Document/Random.pdf`            |
 
-> Backslashes `\` will be automatically converted to forward slashes `/` on Windows systems.
+> Forward slashes `/` will be automatically converted to backslashes `\` on Windows systems.  
 
 In addition to printing out information to the terminal, a `snbackup.log` file will be created alongside the backups in your `save_dir` directory.  
 
