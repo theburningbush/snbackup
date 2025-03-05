@@ -1,16 +1,16 @@
-## Command line utility to wirelessly backup files from a Supernote device
 [![GitHub Release](https://img.shields.io/github/v/release/theburningbush/snbackup)](https://pypi.org/project/snbackup/)
 [![PyPI - Version](https://img.shields.io/pypi/v/snbackup)](https://pypi.org/project/snbackup/)
 ![Supported Python Versions](https://img.shields.io/pypi/pyversions/snbackup)
-![OS support](https://img.shields.io/badge/OS-macOS%20Linux%20Windows-red)  
+![OS support](https://img.shields.io/badge/OS-macOS%20Linux%20Windows-red) 
 
-The primary goal of this project is to create a Python CLI tool to wirelessly backup files (in particular Notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format.  
+## CLI tool for wireless Supernote backups  
+The primary goal of this project is to create a Python command line interface tool to wirelessly backup files (in particular Notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format.  
 
 This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this tool will break.  
 
 ## Table of Contents
-- [Setup Process](#setup-process)
-- [Helpful Information](#helpful-information)
+- [Setup](#setup-process)
+- [Helpful Info](#helpful-information)
 - [Uploading](#uploading)
 - [Additional Options](#additional-options)
 - [Tips](#tips)
