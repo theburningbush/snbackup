@@ -1,6 +1,6 @@
 ## Command line utility to wirelessly backup files from a Supernote device
-![GitHub Release](https://img.shields.io/github/v/release/theburningbush/snbackup)
-![PyPI - Version](https://img.shields.io/pypi/v/snbackup)
+[![GitHub Release](https://img.shields.io/github/v/release/theburningbush/snbackup)](https://pypi.org/project/snbackup/)
+[![PyPI - Version](https://img.shields.io/pypi/v/snbackup)](https://pypi.org/project/snbackup/)
 ![Supported Python Versions](https://img.shields.io/pypi/pyversions/snbackup)
 ![OS support](https://img.shields.io/badge/OS-macOS%20Linux%20Windows-red)  
 
