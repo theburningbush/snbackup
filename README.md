@@ -1,14 +1,16 @@
 ## Command line utility to wirelessly backup files from a Supernote device
+![GitHub Release](https://img.shields.io/github/v/release/theburningbush/snbackup)
+![PyPI - Version](https://img.shields.io/pypi/v/snbackup)
+![Supported Python Versions](https://img.shields.io/pypi/pyversions/snbackup)
+![OS support](https://img.shields.io/badge/OS-macOS%20Linux%20Windows-red)  
 
-The primary goal of the `snbackup` project is to create a CLI tool to wirelessly backup files (in particular notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format.  
+The primary goal of this project is to create a Python CLI tool to wirelessly backup files (in particular Notes) from a Supernote device to a local computer. It doesn't require a user account, mobile app, or storing notes with third-party cloud providers. Its purpose is to archive device files for storage and safekeeping and doesn't attempt to export or convert notes to another format.  
 
-This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this application will break.  
-
-Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info is found on Github: [snbackup](https://github.com/theburningbush/snbackup)  
+This tool will *probably* work on any of the Supernote devices running the most up-to-date software. It works by using the builtin [Browse & Access](https://support.supernote.com/en_US/Tools-Features/wi-fi-transfer) feature available on the Supernote device. If Ratta changes how the Browse & Access feature works in future software updates, it is possible this tool will break.  
 
 ### Setup Process:  
 
-1. Install package with `pip install snbackup` into your python virtual environment. You could also use `pipx` or `uv` to make it globally available on your system.  
+1. Install with `pip install snbackup` into your Python virtual environment. I prefer to use `pipx` to make it globally available on my system.  
 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
@@ -17,7 +19,7 @@ Versioned releases are on [PyPi](https://pypi.org/) but the most up-to-date info
     2. Manually create the _config.json_ file. Copy and paste from the example below and adjust as needed. Place this file in your chosen backup directory from step **2**.  
 
 #### Example config.json (It must contain _save_dir_ and _device_url_):  
-```
+```json
 {
     "save_dir": "/Users/devin/Documents/Supernote",
     "device_url": "http://192.168.1.105:8089/"
@@ -78,8 +80,8 @@ The accepted file extensions for uploads are **.note, .pdf, .epub, .docx, .doc, 
 `snbackup --cleanup 5`  
 
 ---  
-### There are additional configuration options that can be set in the config.json file.  
-```
+### Additional configuration options can be set in the config.json file.  
+```json
 {
     "save_dir": "/Users/devin/Documents/Supernote",
     "device_url": "http://192.168.1.105:8089/"
@@ -87,10 +89,10 @@ The accepted file extensions for uploads are **.note, .pdf, .epub, .docx, .doc, 
     "cleanup": true,
     "truncate_log": 500
 }
-```
-In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the program's log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will run automatically, and the `--cleanup` flag no longer needs to be specified.  
+```  
+In addition to the two required `save_dir` and `device_url` keys, this example config keeps only the 7 most recent backups and also prevents the log file from exceeding 500 lines. With `num_backups` and `cleanup` both set, the cleanup process will run automatically, and the `--cleanup` flag no longer needs to be specified.  
 
-By default the _snbackup.log_ file only keeps the last 1000 lines. This number can be adjusted in the config.json file.
+By default the _snbackup.log_ file only keeps the last 1000 lines. This number can be adjusted in the config.json file.  
 
 ### Tips:
 - If your Supernote device's IP address changes often on your local network, consider assigning it a static IP address. This can typically be done by logging into your router and configuring it there.  
