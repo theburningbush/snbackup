@@ -10,7 +10,7 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 ### Setup Process:  
 
-1. Install with `pip install snbackup` into your Python virtual environment. I prefer to use `pipx` to make it globally available on my system.  
+1. Install with `pip install snbackup` into your Python virtual environment. I prefer to use [pipx](https://pipx.pypa.io/stable/) to make it globally available on my system.  
 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
