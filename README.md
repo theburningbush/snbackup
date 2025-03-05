@@ -62,14 +62,23 @@ It does not currently attempt to download files from a micro sd card if one has 
 ## Uploading:
 You can also _upload_ files from your local computer with the `-u` flag to any of the following folders found on the Supernote device: **Note, Document, EXPORT, MyStyle, SCREENSHOT, INBOX**.  
 
-For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default. The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the destination folder _MyStyle_.  
+For example, `snbackup -u Report.pdf` will upload the _Report.pdf_ file to the _Document_ folder by default.  
+
+The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _picture.jpg_ file to the destination folder _MyStyle_.  
 
 Additionally, you can specify multiple files at once separated by a space:  
 `snbackup -u file1 file2 file3`  
 
-If no destination is specified after the `-d` flag the device Document folder is used.  
+If no destination is specified after the `-d` flag the device Document folder is used.   
 
-The accepted file extensions for uploads are **.note, .pdf, .epub, .docx, .doc, .txt, .png, .jpg, .jpeg, .bmp, .webp, .cbz, .fb2, .xps, .mobi**  
+#### Accepted file extensions for uploads:
+| Category       | File Extensions                          |
+|----------------|------------------------------------------|
+| **Text/Note**  | `.txt`, `.note`                          |
+| **Documents**  | `.pdf`, `.docx`, `.doc`, `.xps`          |
+| **eBooks**     | `.epub`, `.mobi`, `.fb2`, `.cbz`         |
+| **Images**     | `.png`, `.jpg`, `.jpeg`, `.bmp`, `.webp` |
+
 
 ## Additional Options:
 - Show all available command line options:  
