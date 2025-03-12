@@ -26,7 +26,7 @@ class SetupConf:
             print('Connect your Supernote to WiFi and enable Browse & Access.')
             print('Enter the IP address for your Supernote device.')
             self.ip = Prompt.ask('Example 192.168.1.105',)
-            print(f'Enter the device port number.')
+            print('Enter the device port number.')
             self.port = Prompt.ask('Default:', default=self.port)
             print('How many backups would you like to keep locally?')
             print('For example, 5 will keep only the five most recent backups.')
