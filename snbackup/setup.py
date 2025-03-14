@@ -26,7 +26,7 @@ class SetupConf:
             print('Connect your Supernote to WiFi and enable Browse & Access.')
             print('Enter the IP address for your Supernote device.')
             self.ip = Prompt.ask('Example 192.168.1.105',)
-            print(f'Enter the device port number.')
+            print('Enter the device port number.')
             self.port = Prompt.ask('Default:', default=self.port)
             print('How many backups would you like to keep locally?')
             print('For example, 5 will keep only the five most recent backups.')
@@ -108,9 +108,9 @@ class SetupConf:
                 if not self.home_conf.parent.exists():
                     self.home_conf.parent.mkdir(parents=True)
         except PermissionError as e:
-            raise SystemExit(f'Unable to create folders due to OS permissions: {e}')
+            raise SystemExit(f'Unable to create folders due to OS permissions: {e!r}')
         except OSError as e:
-            raise SystemExit(f'An OS error occurred: {e}')
+            raise SystemExit(f'An OS error occurred: {e!r}')
 
     def _construct(self) -> dict:
         """Separating out to leave room for additional configs"""

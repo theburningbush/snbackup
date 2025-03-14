@@ -69,7 +69,7 @@ def truncate_log(lines: int, minimum=100) -> None:
     try:
         lines = int(lines)
     except (ValueError, TypeError):
-        raise SystemExit('Warning: "truncate_log" config option should be an integer')
+        raise SystemExit('The "truncate_log" config option should be an integer.')
     else:
         lines = minimum if lines < minimum else lines
 
