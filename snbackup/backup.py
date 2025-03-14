@@ -48,7 +48,7 @@ def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
         re_match = re.search(r_str, html_text)
         parsed = re_match.group(1)
     except AttributeError as e:
-        logger.error(f'Unable to extract necessary data from device: {e}')
+        logger.error(f'Unable to extract necessary data from device: {e!r}')
         raise SystemExit(1)
     return parsed
 

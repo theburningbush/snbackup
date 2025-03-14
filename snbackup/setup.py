@@ -108,9 +108,9 @@ class SetupConf:
                 if not self.home_conf.parent.exists():
                     self.home_conf.parent.mkdir(parents=True)
         except PermissionError as e:
-            raise SystemExit(f'Unable to create folders due to OS permissions: {e}')
+            raise SystemExit(f'Unable to create folders due to OS permissions: {e!r}')
         except OSError as e:
-            raise SystemExit(f'An OS error occurred: {e}')
+            raise SystemExit(f'An OS error occurred: {e!r}')
 
     def _construct(self) -> dict:
         """Separating out to leave room for additional configs"""
