@@ -35,10 +35,10 @@ def talk_to_device(base_url: str, uri: str, document=None, timeout=1) -> httpx.R
             response.raise_for_status()
         except (httpx.ConnectTimeout, httpx.ConnectError) as e:
             logger.error(f'Unable to reach Supernote device: {e!r}')
-            raise SystemExit('Exiting')
+            raise SystemExit(1)
         except httpx.HTTPError as e:
             logger.error(f'Unhandled error: {e!r}')
-            raise SystemExit('Exiting')
+            raise SystemExit(1)
         return response
 
 
@@ -49,7 +49,7 @@ def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
         parsed = re_match.group(1)
     except AttributeError as e:
         logger.error(f'Unable to extract necessary data from device: {e}')
-        raise SystemExit('Exiting')
+        raise SystemExit(1)
     return parsed
 
 
@@ -192,7 +192,7 @@ def backup() -> None:
     save_dir = Path(save_dir)
     if not save_dir.is_dir():
         raise SystemExit(f'Unable to locate or write to {save_dir}')
-    
+
     json_md_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
@@ -228,14 +228,14 @@ def backup() -> None:
     today = today_pth(save_dir)
 
     todays_files = {
-        SnFiles(today, uri, mdate, size) 
-        for uri, mdate, size 
+        SnFiles(today, uri, mdate, size)
+        for uri, mdate, size
         in device_uri_gen(device_url, all_files)
     }
 
     previous_files = {
-        SnFiles(Path(loc), uri, mod, fsize) 
-        for loc, uri, mod, fsize 
+        SnFiles(Path(loc), uri, mod, fsize)
+        for loc, uri, mod, fsize
         in previous_record_gen(json_md_file)
     }
 
