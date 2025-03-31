@@ -21,7 +21,8 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
-3. **IMPORTANT:** Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
+> [!IMPORTANT] 
+3. Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
     - Run `snbackup --setup` to run a prompted setup and supply your backup directory path, device IP address, and device port number. This will save your _config.json_ to a _.config_ folder within your home directory. The tool will look for this config file automatically when it runs.  
     - Manually create the _config.json_ file. Copy and paste from the example below and adjust as needed. Place this file in your chosen backup directory from step **2**.  
 
