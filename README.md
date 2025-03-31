@@ -37,7 +37,9 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 5. There are three main ways to run the `snbackup` tool from your terminal or command line:  
     - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
-    `snbackup`  
+    ```bash
+    snbackup
+    ```  
 
     - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
     `snbackup -c /the/path/to/config.json`  
