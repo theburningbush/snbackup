@@ -21,8 +21,7 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
-> [!IMPORTANT] 
-> 3. Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
+3. **IMPORTANT:** Create a file called `config.json`. This file is **_required_** to determine where to save your backups and where to access the device on the network. There are a couple options.  
     - Run `snbackup --setup` to run a prompted setup and supply your backup directory path, device IP address, and device port number. This will save your _config.json_ to a _.config_ folder within your home directory. The tool will look for this config file automatically when it runs.  
     - Manually create the _config.json_ file. Copy and paste from the example below and adjust as needed. Place this file in your chosen backup directory from step **2**.  
 
@@ -38,19 +37,13 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 5. There are three main ways to run the `snbackup` tool from your terminal or command line:  
     - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
-        ```bash
-        snbackup
-        ```  
+    `snbackup`  
 
     - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
-        ```bash
-        snbackup -c /the/path/to/config.json
-        ```  
+    `snbackup -c /the/path/to/config.json`  
 
     - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
-        ```bash
-        export SNBACKUP_CONF="/path/to/config.json"
-        ```  
+    `export SNBACKUP_CONF="/path/to/config.json"`  
 
 ---
 
@@ -131,19 +124,3 @@ By default the _snbackup.log_ file only keeps the last 1000 lines. This number c
 - Windows systems use the backslash character `\` as a separator for file paths. This is tricky for JSON files. Luckily, you can still use forward slashes `/` as shown in the example config.json even on Windows. However, you can also escape the backslashes if you prefer. For example your `save_dir` might look something like this `"C:\\Users\\devin\\My Documents\\Supernote"` on a Windows computer.  
 
 - I made this tool for me because I'm slightly paranoid about losing my written notes, thoughts, plans, brain dumps, etc... I'm open to feedback if you experience bugs or have any ideas for improvements.  
-
-
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
-
-> [!TIP]
-> Helpful advice for doing things better or more easily.
-
-> [!IMPORTANT]
-> Key information users need to know to achieve their goal.
-
-> [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems.
-
-> [!CAUTION]
-> Advises about risks or negative outcomes of certain actions.
