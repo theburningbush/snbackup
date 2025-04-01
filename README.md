@@ -37,13 +37,19 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 5. There are three main ways to run the `snbackup` tool from your terminal or command line:  
     - This will first look for the required **_config.json_** from step **3** in the _.config_ folder (if you ran --setup) and then fallback to looking for the file in your current working directory:  
-    `snbackup`  
+        ```bash
+        snbackup
+        ```  
 
     - Use the `-c` or `--config` flag to optionally specify the location of your **_config.json_** file:  
-    `snbackup -c /the/path/to/config.json`  
+        ```bash
+        snbackup -c /the/path/to/config.json
+        ```  
 
     - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
-    `export SNBACKUP_CONF="/path/to/config.json"`  
+        ```bash
+        export SNBACKUP_CONF="/path/to/config.json"
+        ```  
 
 ---
 
@@ -89,19 +95,29 @@ If no destination is specified after the `-d` flag the device Document folder is
 
 ## Additional Options:
 - Show all available command line options:  
-`snbackup -h`  
+    ```bash
+    snbackup -h
+    ```  
 
 - Inspect new files to be downloaded from device but do not download:  
-`snbackup -i`  
+    ```bash
+    snbackup -i
+    ```  
 
 - List out date and size information for backups found locally:  
-`snbackup -ls`  
+    ```bash
+    snbackup -ls
+    ```  
 
 - The full backup flag will ignore previously saved backups and force the tool to redownload everything from device:  
-`snbackup -f`  
+    ```bash
+    snbackup -f
+    ```  
 
 - Remove all but the specified number of backups from your local backup directory. This example will keep only the 5 most recent backups and delete any older ones:  
-`snbackup --cleanup 5`  
+    ```bash
+    snbackup --cleanup 5
+    ```  
 
 ---  
 ### Additional configuration options can be set in the config.json file.  
