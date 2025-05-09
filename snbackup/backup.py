@@ -147,13 +147,30 @@ def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='20
 def run_inspection(to_download: set) -> None:
     """Inspect current notes, determine what's new or changed, and log that out"""
     logger.info('Inspecting changes only')
-    if len(to_download) > 0:
-        logger.info('Listing new or updated files to download:')
+    if to_download:
+        logger.info('New or updated files to download:')
     else:
         logger.info('No new or updated files to download.')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')
+
+
+def process_local_files(unchanged: set, today: Path, device_url: str):
+    """Attempts to read the local files stored from previous backup and will redownload 
+    from device should those be missing or moved from location found in metadata file"""
+
+    for previous_file in unchanged:
+        try:
+            previous_file.file_bytes = previous_file.full_path.read_bytes()
+        except FileNotFoundError:
+            logger.warning(f'Previous backup for {previous_file.full_path} not found on local disk!')
+            logger.warning(f'Redownloading {previous_file.file_uri!r} from device')
+            download_response = talk_to_device(device_url, previous_file.file_uri)
+            previous_file.file_bytes = download_response.read()
+        save_to_pth = today.joinpath(previous_file.file_uri)
+        save_file(save_to_pth, previous_file.file_bytes)
+        previous_file.base_path = today
 
 
 def backup() -> None:
@@ -226,6 +243,7 @@ def backup() -> None:
         all_files.extend(device_data)
 
     today = today_pth(save_dir)
+    # today = save_dir.joinpath('2025-05-13')  # Testing hack
 
     todays_files = {
         SnFiles(today, uri, mdate, size)
@@ -260,11 +278,7 @@ def backup() -> None:
         save_file(new_file.full_path, new_file.file_bytes)
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
-    for previous_file in unchanged:
-        local_note = previous_file.full_path.read_bytes()
-        save_to_pth = today.joinpath(previous_file.file_uri)
-        save_file(save_to_pth, local_note)
-        previous_file.base_path = today
+    process_local_files(unchanged, today, device_url)
 
     if to_download or unchanged:
         records = [note.make_record() for note in it.chain(to_download, unchanged)]

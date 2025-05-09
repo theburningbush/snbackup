@@ -83,3 +83,12 @@ class SnFiles:
             'modified': self.last_modified.strftime('%Y-%m-%d %H:%M:%S'),
             'size': self.file_size,
         }
+    
+    # def read_bytes(self):
+    #     try:
+    #         bytes_obj = self.full_path.read_bytes()
+    #     except FileNotFoundError:
+    #         # This means local file is found on supernote, it's listed in metadata file, but it's not actually on local disk
+    #         # So it can't be read and copied
+    #         bytes_obj = None
+    #     return bytes_obj
