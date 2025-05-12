@@ -21,7 +21,7 @@ class SnFiles:
         self.file_uri = file_uri
         self.last_modified = last_modified
         self.file_size = file_size
-        self.file_bytes = b''
+        self._file_bytes = b''
 
     @property
     def save_date(self) -> str:
@@ -40,12 +40,11 @@ class SnFiles:
         if not isinstance(bytes_obj, bytes):
             raise TypeError('File must be bytes object')
         self._file_bytes = bytes_obj
+        self._file_hash = self._calc_hash()
 
     @property
     def file_hash(self) -> str:
-        if self.file_bytes == b'':
-            raise BytesEmptyError(f'File is empty: {self.file_bytes!r}')
-        return sha256(self.file_bytes).hexdigest()
+        return self._file_hash
 
     @property
     def last_modified(self) -> datetime:
@@ -58,6 +57,15 @@ class SnFiles:
         except (ValueError, TypeError) as e:
             self._last_modified = datetime(2000, 1, 1)
             raise BadDateError(e) from None
+
+    def _calc_hash(self) -> str:
+        if self.file_bytes == b'':
+            # raise BytesEmptyError(f'File is empty: {self.file_uri!r}')
+            return ''
+        return sha256(self._file_bytes).hexdigest()
+    
+    def release_bytes(self) -> None:
+        self._file_bytes = b''
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
@@ -82,13 +90,5 @@ class SnFiles:
             'uri': self.file_uri,
             'modified': self.last_modified.strftime('%Y-%m-%d %H:%M:%S'),
             'size': self.file_size,
+            'hash': self.file_hash,
         }
-    
-    # def read_bytes(self):
-    #     try:
-    #         bytes_obj = self.full_path.read_bytes()
-    #     except FileNotFoundError:
-    #         # This means local file is found on supernote, it's listed in metadata file, but it's not actually on local disk
-    #         # So it can't be read and copied
-    #         bytes_obj = None
-    #     return bytes_obj

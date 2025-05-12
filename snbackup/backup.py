@@ -3,6 +3,7 @@ import json
 import shutil
 import itertools as it
 from pathlib import Path
+from sys import getsizeof
 
 import httpx
 
@@ -156,21 +157,21 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
-def process_local_files(unchanged: set, today: Path, device_url: str):
-    """Attempts to read the local files stored from previous backup and will redownload 
-    from device should those be missing or moved from location found in metadata file"""
+def process_local_file(local_file: Path, today: Path, device_url: str):
+    """Attempts to read locally saved file from previous backup and will redownload 
+    from device should it be missing or moved from location indicated in metadata file"""
 
-    for previous_file in unchanged:
-        try:
-            previous_file.file_bytes = previous_file.full_path.read_bytes()
-        except FileNotFoundError:
-            logger.warning(f'Previous backup for {previous_file.full_path} not found on local disk!')
-            logger.warning(f'Redownloading {previous_file.file_uri!r} from device')
-            download_response = talk_to_device(device_url, previous_file.file_uri)
-            previous_file.file_bytes = download_response.read()
-        save_to_pth = today.joinpath(previous_file.file_uri)
-        save_file(save_to_pth, previous_file.file_bytes)
-        previous_file.base_path = today
+    try:
+        local_file.file_bytes = local_file.full_path.read_bytes()
+    except FileNotFoundError:
+        logger.warning(f'Previous backup for {local_file.full_path} not found on local disk!')
+        logger.warning(f'Redownloading {local_file.file_uri!r} from device')
+        download_response = talk_to_device(device_url, local_file.file_uri)
+        local_file.file_bytes = download_response.read()
+    save_to_pth = today.joinpath(local_file.file_uri)
+    save_file(save_to_pth, local_file.file_bytes)
+    local_file.free_bytes()
+    local_file.base_path = today
 
 
 def backup() -> None:
@@ -243,7 +244,6 @@ def backup() -> None:
         all_files.extend(device_data)
 
     today = today_pth(save_dir)
-    # today = save_dir.joinpath('2025-05-13')  # Testing hack
 
     todays_files = {
         SnFiles(today, uri, mdate, size)
@@ -276,9 +276,11 @@ def backup() -> None:
         download_response = talk_to_device(device_url, new_file.file_uri)
         new_file.file_bytes = download_response.read()
         save_file(new_file.full_path, new_file.file_bytes)
+        new_file.release_bytes()
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
-    process_local_files(unchanged, today, device_url)
+    for previous_file in unchanged:
+        process_local_file(previous_file, today, device_url)
 
     if to_download or unchanged:
         records = [note.make_record() for note in it.chain(to_download, unchanged)]
