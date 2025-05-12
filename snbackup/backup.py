@@ -3,7 +3,6 @@ import json
 import shutil
 import itertools as it
 from pathlib import Path
-from sys import getsizeof
 
 import httpx
 

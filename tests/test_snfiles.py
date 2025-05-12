@@ -49,11 +49,14 @@ def test_last_modified_raises_baddateerror(some_note):
 
 
 def test_make_record(some_note):
+    fake_hash = 'abcedfg1234567'
+    some_note._file_hash = fake_hash
     record = {
         'saved': '2024-08-01',
         'current_loc': '/test/path/2024-08-01',
         'uri': 'uri/fake.note',
         'modified': '2024-07-04 13:45:01',
         'size': 404040,
+        'hash': fake_hash,
     }
     assert some_note.make_record() == record

@@ -8,7 +8,7 @@ version = "2.1.2"
 authors = [
   { name="devdevindev", email="devinwrx@gmail.com" },
 ]
-description = "CLI tool to backup Supernote note files"
+description = "CLI tool for wireless Supernote backups"
 readme = "README.md"
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
