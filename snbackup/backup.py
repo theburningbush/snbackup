@@ -3,10 +3,11 @@ import json
 import shutil
 import itertools as it
 from pathlib import Path
+from datetime import date
 
 import httpx
 
-from .files import SnFiles
+from .files import SnFile
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
     EXTS, FOLDERS, user_input, check_version, today_pth, load_config,
@@ -76,13 +77,13 @@ def device_uri_gen(url: str, note_details: list[dict]):
             yield from device_uri_gen(url, device_data)
 
 
-def save_file(local_pth: Path, file: bytes) -> None:
-    """Make parent directory and write file bytes object to local disk"""
-    local_pth.parent.mkdir(exist_ok=True, parents=True)
+# def save_file(local_pth: Path, file: bytes) -> None:
+#     """Make parent directory and write file bytes object to local disk"""
+#     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
-    logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
-    with open(local_pth, 'wb') as file_output:
-        file_output.write(file)
+#     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
+#     with open(local_pth, 'wb') as file_output:
+#         file_output.write(file)
 
 
 def save_records(file_records: list[dict], json_md: Path) -> None:
@@ -106,11 +107,20 @@ def previous_record_gen(json_md: Path, *, previous=None):
     finally:
         previous = previous or []
 
-    for record in previous:
-        yield (record.get('current_loc'), record.get('uri'), record.get('modified'), record.get('size'))
+    yield from previous
+    # for record in previous:
+    #     yield record
+        # yield (
+        #     record.get('saved_on'),
+        #     record.get('current_loc'),
+        #     record.get('uri'),
+        #     record.get('modified'),
+        #     record.get('size'),
+        #     record.get('hash')
+        # )
 
 
-def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
+def check_for_deleted(current: set, previous: set) -> list[SnFile]:
     """Look for files no longer on device from last backup"""
     symmetric = current.symmetric_difference(previous)
     return [note for note in symmetric if note not in current]
@@ -156,7 +166,7 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
-def process_local_file(local_file: Path, today: Path, device_url: str):
+def process_local_file(local_file: SnFile, today: Path, device_url: str):
     """Attempts to read locally saved file from previous backup and will redownload 
     from device should it be missing or moved from location indicated in metadata file"""
 
@@ -167,9 +177,9 @@ def process_local_file(local_file: Path, today: Path, device_url: str):
         logger.warning(f'Redownloading {local_file.file_uri!r} from device')
         download_response = talk_to_device(device_url, local_file.file_uri)
         local_file.file_bytes = download_response.read()
-    save_to_pth = today.joinpath(local_file.file_uri)
-    save_file(save_to_pth, local_file.file_bytes)
-    local_file.free_bytes()
+    # save_to_pth = today.joinpath(local_file.file_uri)
+    local_file.save_file()
+    del local_file.file_bytes
     local_file.base_path = today
 
 
@@ -243,16 +253,18 @@ def backup() -> None:
         all_files.extend(device_data)
 
     today = today_pth(save_dir)
+    today = save_dir.joinpath('2025-05-20')  # Testing hack
+    today = date.today()
 
     todays_files = {
-        SnFiles(today, uri, mdate, size)
+        SnFile(save_dir, today, uri, mdate, size)
         for uri, mdate, size
         in device_uri_gen(device_url, all_files)
     }
 
     previous_files = {
-        SnFiles(Path(loc), uri, mod, fsize)
-        for loc, uri, mod, fsize
+        SnFile(save_dir, today, **previous_record)
+        for previous_record
         in previous_record_gen(json_md_file)
     }
 
@@ -275,7 +287,7 @@ def backup() -> None:
         download_response = talk_to_device(device_url, new_file.file_uri)
         new_file.file_bytes = download_response.read()
         save_file(new_file.full_path, new_file.file_bytes)
-        new_file.release_bytes()
+        del new_file.file_bytes
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
     for previous_file in unchanged:

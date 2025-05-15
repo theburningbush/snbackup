@@ -1,14 +1,15 @@
 from pathlib import Path
+from hashlib import sha256
 from datetime import datetime
 
 import pytest
 
-from snbackup.files import SnFiles, BadDateError
+from snbackup.files import SnFile, BadDateError
 
 
 @pytest.fixture
-def some_note() -> SnFiles:
-    return SnFiles(Path('/test/path/2024-08-01'), 'uri/fake.note', '2024-07-04 13:45:01', 404040)
+def some_note() -> SnFile:
+    return SnFile(Path('/test/path/2024-08-01'), 'uri/fake.note', '2024-07-04 13:45:01', 404040)
 
 
 def test_save_date(some_note):
@@ -20,6 +21,10 @@ def test_full_path(some_note):
 
 
 def test_file_bytes(some_note):
+    assert some_note.file_bytes == b''
+
+def test_delete_file_bytes(some_note):
+    del some_note.file_bytes
     assert some_note.file_bytes == b''
 
 
@@ -49,14 +54,14 @@ def test_last_modified_raises_baddateerror(some_note):
 
 
 def test_make_record(some_note):
-    fake_hash = 'abcedfg1234567'
-    some_note._file_hash = fake_hash
+    bytes_to_hash = b'actual_bytes_object'
+    some_note.file_bytes = bytes_to_hash
     record = {
         'saved': '2024-08-01',
         'current_loc': '/test/path/2024-08-01',
         'uri': 'uri/fake.note',
         'modified': '2024-07-04 13:45:01',
         'size': 404040,
-        'hash': fake_hash,
+        'hash': sha256(bytes_to_hash).hexdigest(),
     }
     assert some_note.make_record() == record

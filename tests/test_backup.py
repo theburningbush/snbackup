@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 import pytest
 
 from snbackup import backup
-from snbackup.files import SnFiles
+from snbackup.files import SnFile
 
 # Create global logger inside backup namespace otherwise the functions with logging will fail
 backup.create_logger(__file__, running_tests=True)
@@ -207,15 +207,15 @@ def test_load_parsed(json_string):
 
 def test_check_for_deleted():
     # Common notes 
-    cur_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
-    pre_notes = {SnFiles(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    cur_notes = {SnFile(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
+    pre_notes = {SnFile(Path(f'/test/path/2024-08-0{n}'), f'uri/common_{n}.note', f'2024-07-04 13:45:0{n}', 404040) for n in range(1,5)}
 
     # New note created on device since last backup
-    cur_notes.add(SnFiles(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
+    cur_notes.add(SnFile(Path('/test/path/2024-08-11'), 'uri/NEW_only_in_current.note', '2024-08-11 13:45:00', 404040))
 
     # Two notes only found in previous, deleted from device since last backup
-    previous_1 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
-    previous_2 = SnFiles(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
+    previous_1 = SnFile(Path('/test/path/2023-07-31'), 'uri/only_in_previous_1.note', '2023-07-31 12:01:01', 404040)
+    previous_2 = SnFile(Path('/test/path/2023-07-31'), 'uri/only_in_previous_2.note', '2023-07-31 12:01:01', 404040)
     pre_notes.add(previous_1)
     pre_notes.add(previous_2)
     
