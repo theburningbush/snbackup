@@ -46,7 +46,7 @@ This tool will *probably* work on any of the Supernote devices running the most 
         snbackup -c /the/path/to/config.json
         ```  
 
-    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell.  
+    - You can also set the environment variable `SNBACKUP_CONF` which points to the location of the **_config.json_**. This allows you to run `snbackup` from anywhere without needing to specify the config file location. The exact command to set environment variables will depend on your operating system and terminal shell. Setting the environment variable will take priority over the other config lookup methods.  
         ```bash
         export SNBACKUP_CONF="/path/to/config.json"
         ```  

@@ -1,5 +1,8 @@
+import os
 from pathlib import Path
 from hashlib import sha256
+from typing import NamedTuple
+from dataclasses import dataclass
 from datetime import datetime, date
 from functools import total_ordering
 
@@ -12,29 +15,26 @@ class BadDateError(Exception):
     """Bad datetime format or value"""
 
 
+class FileMeta(NamedTuple):
+    uri: str
+    modified: str
+    size: int
+    saved: str | None = None
+    current_loc: str | None = None
+    prev_hash: str | None = None
+
+
 @total_ordering
 class SnFile:
     """Represent an individual Supernote file"""
 
-    def __init__(
-        self, save_to: Path,
-        today: date,
-        uri: str,
-        modified: str,
-        size: int,
-        saved: str | None = None,
-        current_loc: str | None = None,
-        prev_hash: str | None = None
-    ) -> None:
+    def __init__(self, save_to: Path, today: date, file_meta: FileMeta) -> None:
         self.save_to = save_to
         self.today = today
-        self.file_uri = uri
-        self.last_modified = modified
-        self.size = size
-        self.saved = saved
-        self.current_loc = current_loc
-        self.prev_hash = prev_hash
+        self.file_meta = file_meta
         self._file_bytes = b''
+        self._calc_hash = None
+        self._consistency = None
 
     @property
     def save_date(self) -> str:
@@ -42,7 +42,8 @@ class SnFile:
 
     @property
     def full_path(self) -> Path:
-        return self.base_path.joinpath(self.uri)
+        date_pth = Path(f'{self.date!s}/{self.uri}')
+        return self.save_to.joinpath(date_pth)
 
     @property
     def file_bytes(self) -> bytes:
@@ -80,13 +81,20 @@ class SnFile:
             return ''
         return sha256(self._file_bytes).hexdigest()
     
+    def _validate(self) -> None:
+        if self.prev_hash:
+            self._consistency = (self._file_hash == self.prev_hash)
+
     def _make_dir(self) -> None:
         self.full_path.parent.mkdir(exist_ok=True, parents=True)
 
     def save_file(self) -> None:
+        """More verbose write operation to ensure file is written to disk"""
         self._make_dir()
         with open(self.full_path, 'wb') as file_output:
             file_output.write(self.file_bytes)
+            file_output.flush()
+            os.fsync(file_output.fileno())
     
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
@@ -101,8 +109,27 @@ class SnFile:
     def __hash__(self) -> int:
         return hash((self.uri, self.modified, self.size))
 
+    # def __repr__(self) -> str:
+    #     return f"{type(self).__name__}({self.base_path!r}, {self.uri!r}, '{self.modified}', {self.size})"
+
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.base_path!r}, {self.uri!r}, '{self.modified}', {self.size})"
+        return (
+            f'{type(self).__name__}('
+            f'save_to={self.save_to!r}, '
+            f'uri={self.uri!r}, '
+            f"modified='{self.modified}', "
+            f'size={self.size}), '
+            f''
+        )
+    
+    # def __repr__(self) -> str:
+    #     return f"""{type(self).__name__}(
+    #     base_path={self.base_path!r},
+    #     uri={self.uri!r},
+    #     modified='{self.modified}',
+    #     size={self.size}
+    # )"""
+
 
     def make_record(self) -> dict:
         return {

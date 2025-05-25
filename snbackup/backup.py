@@ -7,11 +7,13 @@ from datetime import date
 
 import httpx
 
-from .files import SnFile
+from .files import SnFile, FileMeta
+from .setup import SetupConf
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
-    EXTS, FOLDERS, user_input, check_version, today_pth, load_config,
-    bytes_to_mb, count_backups, recursive_scan, locate_config
+    EXTS, FOLDERS, user_input, check_version, 
+    today_pth, load_config, bytes_to_mb,
+    count_backups, recursive_scan, locate_config
 )
 
 
@@ -77,6 +79,18 @@ def device_uri_gen(url: str, note_details: list[dict]):
             yield from device_uri_gen(url, device_data)
 
 
+def extract_meta(url: str, file_details: list[dict]):
+    """Recursive generator to extract data to instantiate SnFile object"""
+    for data in file_details:
+        if not data.get('isDirectory'):
+            # Drop the anchor slash to call joinpath later and it work properly
+            yield data.get('uri').lstrip('/'), data.get('date'), data.get('size')
+        else:
+            html = talk_to_device(url, data.get('uri').lstrip('/'))
+            re_parse = parse_html(html.text)
+            device_data = load_parsed(re_parse)
+            yield from device_uri_gen(url, device_data)
+
 # def save_file(local_pth: Path, file: bytes) -> None:
 #     """Make parent directory and write file bytes object to local disk"""
 #     local_pth.parent.mkdir(exist_ok=True, parents=True)
@@ -108,16 +122,23 @@ def previous_record_gen(json_md: Path, *, previous=None):
         previous = previous or []
 
     yield from previous
-    # for record in previous:
-    #     yield record
-        # yield (
-        #     record.get('saved_on'),
-        #     record.get('current_loc'),
-        #     record.get('uri'),
-        #     record.get('modified'),
-        #     record.get('size'),
-        #     record.get('hash')
-        # )
+
+
+def load_metadata(json_md: Path, *, meta=None) -> list:
+    """Retreive last backup metadata from file and 
+    returns the array of dictionaries or an empty array"""
+
+    try:
+        with open(json_md) as json_in:
+            meta = json.loads(json_in.read())
+    except FileNotFoundError:
+        logger.warning('Unable to locate metadata file. Creating new file')
+    except json.JSONDecodeError:
+        logger.warning('Unable to decode json in metadata file')
+    finally:
+        meta = meta or []
+    return meta
+
 
 
 def check_for_deleted(current: set, previous: set) -> list[SnFile]:
@@ -192,7 +213,6 @@ def backup() -> None:
         raise SystemExit()
 
     if args.setup:
-        from .setup import SetupConf  # Lazy import
         setup = SetupConf()
         setup.prompt()
         setup.write_config()
