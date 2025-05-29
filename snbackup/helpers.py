@@ -79,7 +79,11 @@ def user_input() -> Namespace:
 
 def locate_config() -> Path:
     """Look in potential config locations and return first valid"""
-    conf_locations = (os.getenv('SNBACKUP_CONF', ''), SetupConf.home_conf, Path().cwd().joinpath(SetupConf.config))
+    conf_locations = (
+        os.getenv('SNBACKUP_CONF', ''),
+        SetupConf.home_conf,
+        Path().cwd().joinpath(SetupConf.config)
+    )
     for conf in conf_locations:
         pth = Path(conf)
         if pth.is_file() and pth.suffix == '.json':
@@ -116,9 +120,9 @@ def bytes_to_mb(byte_size: int) -> str:
 
 
 def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
-    """Counts number of backup folders and returns oldest and
-    newest found on local disk"""
-
+    """Counts number of backup folders and returns
+    oldest and newest found on local disk
+    """
     previous = sorted(directory.glob(pattern))
     if not previous:
         return 0, directory, directory
