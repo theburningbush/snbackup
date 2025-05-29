@@ -7,29 +7,55 @@ from argparse import ArgumentParser, Namespace
 from .setup import SetupConf
 
 FOLDERS = {
-    'note': 'Note', 
-    'document': 'Document', 
-    'export': 'EXPORT', 
-    'mystyle': 'MyStyle', 
-    'screenshot': 'SCREENSHOT', 
+    'note': 'Note',
+    'document': 'Document',
+    'export': 'EXPORT',
+    'mystyle': 'MyStyle',
+    'screenshot': 'SCREENSHOT',
     'inbox': 'INBOX',
 }
 
 EXTS = {
-    '.note', '.pdf', '.epub', '.docx', '.doc', 
-    '.txt', '.png', '.jpg', '.jpeg', '.bmp', 
-    '.webp', '.cbz', '.fb2', '.xps', '.mobi',
+    '.note',
+    '.pdf',
+    '.epub',
+    '.docx',
+    '.doc',
+    '.txt',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.bmp',
+    '.webp',
+    '.cbz',
+    '.fb2',
+    '.xps',
+    '.mobi',
 }
 
 
 def user_input() -> Namespace:
     parser = ArgumentParser(allow_abbrev=False)
     parser.add_argument('-c', '--config', type=Path, help='Path to config.json file')
-    parser.add_argument('-f', '--full', action='store_true', help='Download all notes and files from device. Disregard any saved locally.')
-    parser.add_argument('-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit')
-    parser.add_argument('-u', '--upload', nargs='+', help='Send one or more files to device. "snbackup -u file1 file2 file3"')
     parser.add_argument(
-        '-d', '--destination', default='document', type=str.lower, choices=FOLDERS, help='Destination folder to send file upload'
+        '-f',
+        '--full',
+        action='store_true',
+        help='Download all notes and files from device. Disregard any saved locally.',
+    )
+    parser.add_argument(
+        '-i', '--inspect', action='store_true', help='Inspect device for new files to download and quit'
+    )
+    parser.add_argument(
+        '-u', '--upload', nargs='+', help='Send one or more files to device. "snbackup -u file1 file2 file3"'
+    )
+    parser.add_argument(
+        '-d',
+        '--destination',
+        default='document',
+        type=str.lower,
+        choices=FOLDERS,
+        help='Destination folder to send file upload',
     )
     parser.add_argument('-ls', '--list', action='store_true', help='List out information about backups found locally')
     parser.add_argument('-v', '--version', action='store_true', help='Print program version and quit.')
@@ -53,11 +79,7 @@ def user_input() -> Namespace:
 
 def locate_config() -> Path:
     """Look in potential config locations and return first valid"""
-    conf_locations = (
-        os.getenv('SNBACKUP_CONF', ''), 
-        SetupConf.home_conf, 
-        Path().cwd().joinpath(SetupConf.config)
-    )
+    conf_locations = (os.getenv('SNBACKUP_CONF', ''), SetupConf.home_conf, Path().cwd().joinpath(SetupConf.config))
     for conf in conf_locations:
         pth = Path(conf)
         if pth.is_file() and pth.suffix == '.json':
@@ -84,7 +106,8 @@ def today_pth(save_dir: Path) -> Path:
 
 def check_version(name: str) -> str:
     from importlib.metadata import version
-    return f"{name} v{version(name)}"
+
+    return f'{name} v{version(name)}'
 
 
 def bytes_to_mb(byte_size: int) -> str:
@@ -93,7 +116,7 @@ def bytes_to_mb(byte_size: int) -> str:
 
 
 def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
-    """Counts number of backup folders and returns oldest and 
+    """Counts number of backup folders and returns oldest and
     newest found on local disk"""
 
     previous = sorted(directory.glob(pattern))

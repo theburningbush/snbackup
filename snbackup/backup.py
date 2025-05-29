@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import shutil
@@ -7,15 +8,24 @@ from pathlib import Path
 import httpx
 
 from .files import SnFiles
+from .setup import SetupConf
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
-    EXTS, FOLDERS, user_input, check_version, today_pth, load_config,
-    bytes_to_mb, count_backups, recursive_scan, locate_config
+    EXTS,
+    FOLDERS,
+    user_input,
+    check_version,
+    today_pth,
+    load_config,
+    bytes_to_mb,
+    count_backups,
+    recursive_scan,
+    locate_config,
 )
 
 
 def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> None:
-    """Set up a global logger to be used throughout the program"""
+    """Set up a global logger to be used throughout the program."""
     global logger
     custom = CustomLogger(level)
     if not running_tests:
@@ -25,7 +35,7 @@ def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> N
 
 
 def talk_to_device(base_url: str, uri: str, document=None, timeout=1) -> httpx.Response:
-    """Downloads and uploads files to Supernote device"""
+    """Downloads and uploads files to remote device."""
     with httpx.Client(base_url=base_url, timeout=timeout) as client:
         try:
             if document:
@@ -43,7 +53,7 @@ def talk_to_device(base_url: str, uri: str, document=None, timeout=1) -> httpx.R
 
 
 def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
-    """Search for a particular json string in html"""
+    """Search for a particular json string in html."""
     try:
         re_match = re.search(r_str, html_text)
         parsed = re_match.group(1)
@@ -54,7 +64,7 @@ def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
 
 
 def load_parsed(parsed: str) -> list[dict] | list:
-    """Deserialize json extracted from device"""
+    """Deserialize json extracted from device."""
     try:
         parsed_dict = json.loads(parsed)
     except json.JSONDecodeError as e:
@@ -77,25 +87,27 @@ def device_uri_gen(url: str, note_details: list[dict]):
 
 
 def save_file(local_pth: Path, file: bytes) -> None:
-    """Make parent directory and write file bytes object to local disk"""
+    """Make parent directory and write file bytes object to local disk."""
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
     with open(local_pth, 'wb') as file_output:
         file_output.write(file)
+        file_output.flush()
+        os.fsync(file_output.fileno())
 
 
 def save_records(file_records: list[dict], json_md: Path) -> None:
-    """Persist today's file metadata to json file"""
+    """Persist today's file metadata to json file."""
     logger.info('Saving file records to metadata json file')
     with open(json_md, 'wt') as json_out:
         print(json.dumps(file_records), file=json_out)
 
 
 def previous_record_gen(json_md: Path, *, previous=None):
-    """Retreive last backup metadata from json and
-    yield back relevant info to instantiate file objects"""
-
+    """Retreive last backup metadata found locally and
+    yields back relevant info to instantiate file objects.
+    """
     try:
         with open(json_md) as json_in:
             previous = json.loads(json_in.read())
@@ -111,19 +123,20 @@ def previous_record_gen(json_md: Path, *, previous=None):
 
 
 def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
-    """Look for files no longer on device from last backup"""
+    """Look for files no longer on device from last backup."""
     symmetric = current.symmetric_difference(previous)
     return [note for note in symmetric if note not in current]
 
 
 def prepare_upload(ufile: list):
-    """Prepare file upload to send to device"""
+    """Prepare file upload to send to device."""
     for file in (Path(file) for file in ufile):
         if file.is_file() and file.suffix.casefold() in EXTS:
             yield {f'{file.name}': open(file, 'rb')}
 
 
 def upload_files(url: str, to_upload: list, destination: str) -> str | None:
+    """Uploads chosen files to remote device."""
     response = None
     for file in prepare_upload(to_upload):
         response = talk_to_device(url, uri=destination, document=file)
@@ -134,7 +147,7 @@ def upload_files(url: str, to_upload: list, destination: str) -> str | None:
 
 
 def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='202?-*') -> None:
-    """Delete old backups from the backup save directory on local disk"""
+    """Delete old backups from the backup save directory on local disk."""
     if num_backups > 0 and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
         previous_folders = sorted(base_dir.glob(pattern), reverse=True)
@@ -145,7 +158,7 @@ def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='20
 
 
 def run_inspection(to_download: set) -> None:
-    """Inspect current notes, determine what's new or changed, and log that out"""
+    """Inspect current notes, determine what's new or changed, and log that out."""
     logger.info('Inspecting changes only')
     if len(to_download) > 0:
         logger.info('Listing new or updated files to download:')
@@ -157,7 +170,7 @@ def run_inspection(to_download: set) -> None:
 
 
 def backup() -> None:
-    """Main workflow logic"""
+    """Main workflow logic."""
     args = user_input()
 
     if args.version:
@@ -165,7 +178,6 @@ def backup() -> None:
         raise SystemExit()
 
     if args.setup:
-        from .setup import SetupConf  # Lazy import
         setup = SetupConf()
         setup.prompt()
         setup.write_config()
@@ -229,14 +241,12 @@ def backup() -> None:
 
     todays_files = {
         SnFiles(today, uri, mdate, size)
-        for uri, mdate, size
-        in device_uri_gen(device_url, all_files)
+        for uri, mdate, size in device_uri_gen(device_url, all_files)
     }
 
     previous_files = {
         SnFiles(Path(loc), uri, mod, fsize)
-        for loc, uri, mod, fsize
-        in previous_record_gen(json_md_file)
+        for loc, uri, mod, fsize in previous_record_gen(json_md_file)
     }
 
     for deleted_note in check_for_deleted(todays_files, previous_files):
@@ -261,9 +271,9 @@ def backup() -> None:
 
     logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
     for previous_file in unchanged:
-        local_note = previous_file.full_path.read_bytes()
+        local_file = previous_file.full_path.read_bytes()
         save_to_pth = today.joinpath(previous_file.file_uri)
-        save_file(save_to_pth, local_note)
+        save_file(save_to_pth, local_file)
         previous_file.base_path = today
 
     if to_download or unchanged:

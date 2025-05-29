@@ -1,12 +1,14 @@
 """User interactive setup"""
+
 import re
 import json
 from pathlib import Path
 
 from rich.prompt import Prompt
 
+
 class SetupConf:
-    """Assist in setting up a config file for application"""
+    """Assist in setting up a config file for application."""
 
     config = 'config.json'
     home_conf = Path().home().joinpath(f'.config/snbackup/{config}')
@@ -16,23 +18,23 @@ class SetupConf:
         self.port = '8089'
         self.backups = 0
         self.cleanup = False
-    
+
     def prompt(self) -> None:
-        """Collect user input"""
+        """Collect user input."""
         try:
-            print(' SETUP '.center(50, '='))
+            print(' SETUP '.center(55, '='))
             print('Where do you want to save your Supernote backups?')
             self.save = Prompt.ask('Default:', default=f'{self.save}')
             print('Connect your Supernote to WiFi and enable Browse & Access.')
             print('Enter the IP address for your Supernote device.')
-            self.ip = Prompt.ask('Example 192.168.1.105',)
+            self.ip = Prompt.ask('Example 192.168.1.105')
             print('Enter the device port number.')
             self.port = Prompt.ask('Default:', default=self.port)
             print('How many backups would you like to keep locally?')
             print('For example, 5 will keep only the five most recent backups.')
             print('Enter 0 for unlimited backups')
             self.backups = Prompt.ask('Default', default='0')
-            print(' CONFIRM '.center(50, '='))
+            print(' CONFIRM '.center(55, '='))
             print(f'- Backing up Supernote files to {self.save}')
             print(f'- Device URL is {self.url}')
             if self.backups > 0:
@@ -48,7 +50,7 @@ class SetupConf:
     @property
     def save(self) -> Path:
         return self._save
-    
+
     @save.setter
     def save(self, save_dir: str) -> None:
         self._save = Path(save_dir) if save_dir else self.save
@@ -56,7 +58,7 @@ class SetupConf:
     @property
     def port(self) -> str:
         return self._port
-    
+
     @port.setter
     def port(self, device_port: str) -> None:
         if device_port == '':
@@ -75,7 +77,7 @@ class SetupConf:
     @property
     def ip(self) -> str:
         return self._ip
-    
+
     @ip.setter
     def ip(self, addr: str) -> None:
         # Good enough IPv4 validation
@@ -113,7 +115,7 @@ class SetupConf:
             raise SystemExit(f'An OS error occurred: {e!r}')
 
     def _construct(self) -> dict:
-        """Separating out to leave room for additional configs"""
+        """Separating out to leave room for additional configs."""
         return {
             'save_dir': str(self.save),
             'device_url': self.url,
@@ -126,6 +128,3 @@ class SetupConf:
         self._create_folders(folder='config')
         with open(self.home_conf, 'wt') as config:
             json.dump(self._construct(), config, indent=4)
-            
-        
-
