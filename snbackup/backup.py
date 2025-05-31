@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 
 from .files import SnFiles
+from .device import Device
 from .setup import SetupConf
 from .utilities import CustomLogger, truncate_log
 from .helpers import (
@@ -34,23 +35,20 @@ def create_logger(log_file_name: str, level='INFO', *, running_tests=False) -> N
     logger = custom.logger
 
 
-def talk_to_device(base_url: str, uri: str, document=None, timeout=1) -> httpx.Response:
-    """Downloads and uploads files to remote device."""
-    with httpx.Client(base_url=base_url, timeout=timeout) as client:
-        try:
-            if document:
-                response = client.post(uri, files=document)
-            else:
-                response = client.get(uri)
-            response.raise_for_status()
-        except (httpx.ConnectTimeout, httpx.ConnectError) as e:
-            logger.error(f'Unable to reach Supernote device: {e!r}')
-            raise SystemExit(1)
-        except httpx.HTTPError as e:
-            logger.error(f'Unhandled error: {e!r}')
-            raise SystemExit(1)
-        return response
-
+def talk_to_device(device: Device, uri: str, document=None) -> httpx.Response:
+    """Wrapper to handle calling device, logging, and managing exceptions"""
+    try:
+        response = device.http_request(uri, document)
+    except (httpx.ConnectTimeout, httpx.ConnectError) as e:
+        logger.error(f'Unable to reach Supernote device: {e!r}')
+        device.close()
+        raise SystemExit(1)
+    except httpx.HTTPError as e:
+        logger.error(f'Unhandled error: {e!r}')
+        device.close()
+        raise SystemExit(1)
+    return response
+    
 
 def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
     """Search for a particular json string in html."""
@@ -73,17 +71,17 @@ def load_parsed(parsed: str) -> list[dict] | list:
     return parsed_dict.get('fileList', [])
 
 
-def device_uri_gen(url: str, note_details: list[dict]):
+def device_uri_gen(device: Device, file_details: list[dict]):
     """Recursive generator to extract uri, modified date, and file size"""
-    for note in note_details:
-        if not note.get('isDirectory'):
-            # Drop the anchor slash to call joinpath later and it work properly
-            yield note.get('uri').lstrip('/'), note.get('date'), note.get('size')
+    for file in file_details:
+        file_uri = file.get('uri').lstrip('/')  # Drop anchor slash to call joinpath later and it work
+        if not file.get('isDirectory'):
+            yield file_uri, file.get('date'), file.get('size')
         else:
-            html = talk_to_device(url, note.get('uri').lstrip('/'))
+            html = talk_to_device(device, file_uri)
             re_parse = parse_html(html.text)
-            device_data = load_parsed(re_parse)
-            yield from device_uri_gen(url, device_data)
+            new_file_details = load_parsed(re_parse)
+            yield from device_uri_gen(device, new_file_details)
 
 
 def save_file(local_pth: Path, file: bytes) -> None:
@@ -135,11 +133,11 @@ def prepare_upload(ufile: list):
             yield {f'{file.name}': open(file, 'rb')}
 
 
-def upload_files(url: str, to_upload: list, destination: str) -> str | None:
+def upload_files(device: Device, to_upload: list, destination: str) -> str | None:
     """Uploads chosen files to remote device."""
     response = None
     for file in prepare_upload(to_upload):
-        response = talk_to_device(url, uri=destination, document=file)
+        response = talk_to_device(device, destination, file)
         for resp in response.json():
             file, size = resp.get('name'), resp.get('size', 0)
             logger.info(f'Uploaded {file} to {destination} folder ({bytes_to_mb(size)} MB)')
@@ -226,13 +224,15 @@ def backup() -> None:
         logger.info(msg)
         raise SystemExit()
 
+    device = Device(device_url)
+
     # Begin download logic
     logger.info(f'Saving files to {save_dir.absolute()}')
 
     all_files = []
 
     for folder in args.notes:
-        httpx_response = talk_to_device(device_url, folder)
+        httpx_response = talk_to_device(device, folder)
         re_parse = parse_html(httpx_response.text)
         device_data = load_parsed(re_parse)
         all_files.extend(device_data)
@@ -241,7 +241,7 @@ def backup() -> None:
 
     todays_files = {
         SnFiles(today, uri, mdate, size)
-        for uri, mdate, size in device_uri_gen(device_url, all_files)
+        for uri, mdate, size in device_uri_gen(device, all_files)
     }
 
     previous_files = {
@@ -265,7 +265,7 @@ def backup() -> None:
 
     logger.info(f'Downloading {len(to_download)} files from device.')
     for new_file in to_download:
-        download_response = talk_to_device(device_url, new_file.file_uri)
+        download_response = talk_to_device(device, new_file.file_uri)
         new_file.file_bytes = download_response.read()
         save_file(new_file.full_path, new_file.file_bytes)
 
@@ -275,6 +275,8 @@ def backup() -> None:
         save_to_pth = today.joinpath(previous_file.file_uri)
         save_file(save_to_pth, local_file)
         previous_file.base_path = today
+
+    device.close()
 
     if to_download or unchanged:
         records = [note.make_record() for note in it.chain(to_download, unchanged)]
