@@ -82,7 +82,7 @@ The command `snbackup -u /path/to/picture.jpg -d MyStyle` will upload the _pictu
 Additionally, you can specify multiple files at once separated by a space:  
 `snbackup -u file1 file2 file3`  
 
-If no destination is specified after the `-d` flag the device Document folder is used.   
+If no destination is specified after the `-d` flag the device's **Document** folder is used.  
 
 #### Accepted file extensions for uploads:
 | Category       | File Extensions                          |

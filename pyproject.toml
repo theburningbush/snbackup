@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snbackup"
-version = "2.1.2"
+version = "2.2.0"
 authors = [
   { name="devdevindev", email="devinwrx@gmail.com" },
 ]
@@ -69,7 +69,7 @@ exclude = [
     "venv",
 ]
 
-line-length = 140
+line-length = 120
 indent-width = 4
 
 target-version = "py310"

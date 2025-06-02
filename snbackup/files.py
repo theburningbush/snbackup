@@ -5,16 +5,16 @@ from functools import total_ordering
 
 
 class BytesEmptyError(Exception):
-    """Bytes object empty"""
+    """Bytes object empty."""
 
 
 class BadDateError(Exception):
-    """Bad datetime format or value"""
+    """Bad datetime format or value."""
 
 
 @total_ordering
 class SnFiles:
-    """Represent an individual Supernote file"""
+    """Represent an individual Supernote file."""
 
     def __init__(self, base_path: Path, file_uri: str, last_modified: str, file_size: int) -> None:
         self.base_path = base_path
