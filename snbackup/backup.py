@@ -48,10 +48,10 @@ def talk_to_device(device: Device, uri: str, document=None) -> httpx.Response:
     return response
 
 
-def parse_html(html_text: str, r_str=r"const json = '(?P<json_str>{.*?})'") -> str:
+def parse_html(html_text: str, regex_str=r"const json = '(?P<json_str>{.*?})'") -> str:
     """Search for and extract a particular json string in html."""
     try:
-        re_match = re.search(r_str, html_text)
+        re_match = re.search(regex_str, html_text)
         parsed = re_match.group('json_str')
     except AttributeError as e:
         logger.error(f'Unable to extract necessary data from device: {e!r}')
@@ -121,7 +121,7 @@ def previous_record_gen(json_md: Path, *, previous=None):
 def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
     """Look for files no longer on device from last backup."""
     symmetric = current.symmetric_difference(previous)
-    return [note for note in symmetric if note not in current]
+    return [file for file in symmetric if file not in current]
 
 
 def prepare_upload(ufile: list):
@@ -154,7 +154,7 @@ def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='20
 
 
 def run_inspection(to_download: set) -> None:
-    """Inspect current notes, determine what's new or changed, and log that out."""
+    """Inspect current files, determine what's new or changed, and log that out."""
     logger.info('Inspecting changes only')
     if len(to_download) > 0:
         logger.info('Listing new or updated files to download:')
@@ -246,8 +246,8 @@ def backup() -> None:
             for loc, uri, mod, fsize in previous_record_gen(metadata_file)
         }
 
-        for deleted_note in check_for_deleted(todays_files, previous_files):
-            previous_files.discard(deleted_note)
+        for deleted_file in check_for_deleted(todays_files, previous_files):
+            previous_files.discard(deleted_file)
 
         if args.full:
             previous_files = set()
@@ -272,12 +272,11 @@ def backup() -> None:
             save_to_pth = today.joinpath(previous_file.file_uri)
             save_file(save_to_pth, local_file)
             previous_file.base_path = today
-
     finally:
         device.close()
 
     if to_download or unchanged:
-        records = [note.make_record() for note in it.chain(to_download, unchanged)]
+        records = [snfile.make_record() for snfile in it.chain(to_download, unchanged)]
         save_records(records, metadata_file)
 
     if args.cleanup:

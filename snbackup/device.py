@@ -4,7 +4,7 @@ import httpx
 class Device:
     """Manages httpx Client."""
 
-    def __init__(self, base_url: str, timeout: int = 1) -> None:
+    def __init__(self, base_url: str, timeout=1) -> None:
         self.base_url = base_url
         self.timeout = timeout
         self.client = httpx.Client(base_url=self.base_url, timeout=self.timeout)
