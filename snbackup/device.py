@@ -17,7 +17,7 @@ class Device:
             response = self.client.get(uri)
         response.raise_for_status()
         return response
-    
+
     def close(self) -> None:
         self.client.close()
 

@@ -189,8 +189,14 @@ def test_previous_record_gen(metadata):
     assert list(not_found_error) == []
 
 
-def test_parse_html(html_text, json_string):
+def test_parse_html_success(html_text, json_string):
     assert backup.parse_html(html_text) == json_string
+
+
+def test_parse_html_error_exit():
+    with pytest.raises(SystemExit) as e:
+        backup.parse_html('invalid html text')
+    assert e.value.code == 1
 
 
 def test_load_parsed(json_string):

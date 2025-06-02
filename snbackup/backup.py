@@ -41,20 +41,18 @@ def talk_to_device(device: Device, uri: str, document=None) -> httpx.Response:
         response = device.http_request(uri, document)
     except (httpx.ConnectTimeout, httpx.ConnectError) as e:
         logger.error(f'Unable to reach Supernote device: {e!r}')
-        device.close()
         raise SystemExit(1)
     except httpx.HTTPError as e:
         logger.error(f'Unhandled error: {e!r}')
-        device.close()
         raise SystemExit(1)
     return response
-    
 
-def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
-    """Search for a particular json string in html."""
+
+def parse_html(html_text: str, r_str=r"const json = '(?P<json_str>{.*?})'") -> str:
+    """Search for and extract a particular json string in html."""
     try:
         re_match = re.search(r_str, html_text)
-        parsed = re_match.group(1)
+        parsed = re_match.group('json_str')
     except AttributeError as e:
         logger.error(f'Unable to extract necessary data from device: {e!r}')
         raise SystemExit(1)
@@ -62,7 +60,7 @@ def parse_html(html_text: str, r_str=r"const json = '({.*?})'") -> str:
 
 
 def load_parsed(parsed: str) -> list[dict] | list:
-    """Deserialize json extracted from device."""
+    """Deserialize json extracted from device for creating file objects."""
     try:
         parsed_dict = json.loads(parsed)
     except json.JSONDecodeError as e:
@@ -72,7 +70,7 @@ def load_parsed(parsed: str) -> list[dict] | list:
 
 
 def device_uri_gen(device: Device, file_details: list[dict]):
-    """Recursive generator to extract uri, modified date, and file size"""
+    """Recursive generator to extract uri, modified date, and file size."""
     for file in file_details:
         file_uri = file.get('uri').lstrip('/')  # Drop anchor slash to call joinpath later and it work
         if not file.get('isDirectory'):
@@ -103,8 +101,8 @@ def save_records(file_records: list[dict], json_md: Path) -> None:
 
 
 def previous_record_gen(json_md: Path, *, previous=None):
-    """Retreive last backup metadata found locally and
-    yields back relevant info to instantiate file objects.
+    """Retreive last backup metadata found locally and yield
+    back relevant info to instantiate file objects.
     """
     try:
         with open(json_md) as json_in:
@@ -203,7 +201,7 @@ def backup() -> None:
     if not save_dir.is_dir():
         raise SystemExit(f'Unable to locate or write to {save_dir}')
 
-    json_md_file = Path(save_dir.joinpath('metadata.json'))
+    metadata_file = Path(save_dir.joinpath('metadata.json'))
 
     create_logger(str(save_dir.joinpath('snbackup')))
 
@@ -216,71 +214,71 @@ def backup() -> None:
         logger.info(f'Latest backup: {latest.name} ({bytes_to_mb(recursive_scan(latest))} MB)')
         raise SystemExit()
 
-    logger.info(f'Device at {device_url}')
-
-    if args.upload:
-        resp = upload_files(device_url, args.upload, FOLDERS.get(args.destination))
-        msg = resp if resp else 'No files to upload.'
-        logger.info(msg)
-        raise SystemExit()
-
     device = Device(device_url)
+    logger.info(f'Device at {device.base_url}')
 
-    # Begin download logic
-    logger.info(f'Saving files to {save_dir.absolute()}')
+    try:
+        if args.upload:
+            resp = upload_files(device, args.upload, FOLDERS.get(args.destination))
+            msg = resp if resp else 'No files to upload.'
+            logger.info(msg)
+            raise SystemExit()
 
-    all_files = []
+        logger.info(f'Saving files to {save_dir.absolute()}')
 
-    for folder in args.notes:
-        httpx_response = talk_to_device(device, folder)
-        re_parse = parse_html(httpx_response.text)
-        device_data = load_parsed(re_parse)
-        all_files.extend(device_data)
+        all_files = []
 
-    today = today_pth(save_dir)
+        for folder in args.notes:
+            httpx_response = talk_to_device(device, folder)
+            re_parse = parse_html(httpx_response.text)
+            device_data = load_parsed(re_parse)
+            all_files.extend(device_data)
 
-    todays_files = {
-        SnFiles(today, uri, mdate, size)
-        for uri, mdate, size in device_uri_gen(device, all_files)
-    }
+        today = today_pth(save_dir)
 
-    previous_files = {
-        SnFiles(Path(loc), uri, mod, fsize)
-        for loc, uri, mod, fsize in previous_record_gen(json_md_file)
-    }
+        todays_files = {
+            SnFiles(today, uri, mdate, size)
+            for uri, mdate, size in device_uri_gen(device, all_files)
+        }
 
-    for deleted_note in check_for_deleted(todays_files, previous_files):
-        previous_files.discard(deleted_note)
+        previous_files = {
+            SnFiles(Path(loc), uri, mod, fsize)
+            for loc, uri, mod, fsize in previous_record_gen(metadata_file)
+        }
 
-    if args.full:
-        previous_files = set()
+        for deleted_note in check_for_deleted(todays_files, previous_files):
+            previous_files.discard(deleted_note)
 
-    to_download = todays_files.difference(previous_files)
+        if args.full:
+            previous_files = set()
 
-    unchanged = todays_files.intersection(previous_files)
+        to_download = todays_files.difference(previous_files)
 
-    if args.inspect:
-        run_inspection(to_download)
-        raise SystemExit()
+        unchanged = todays_files.intersection(previous_files)
 
-    logger.info(f'Downloading {len(to_download)} files from device.')
-    for new_file in to_download:
-        download_response = talk_to_device(device, new_file.file_uri)
-        new_file.file_bytes = download_response.read()
-        save_file(new_file.full_path, new_file.file_bytes)
+        if args.inspect:
+            run_inspection(to_download)
+            raise SystemExit()
 
-    logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
-    for previous_file in unchanged:
-        local_file = previous_file.full_path.read_bytes()
-        save_to_pth = today.joinpath(previous_file.file_uri)
-        save_file(save_to_pth, local_file)
-        previous_file.base_path = today
+        logger.info(f'Downloading {len(to_download)} files from device.')
+        for new_file in to_download:
+            download_response = talk_to_device(device, new_file.file_uri)
+            new_file.file_bytes = download_response.read()
+            save_file(new_file.full_path, new_file.file_bytes)
 
-    device.close()
+        logger.info(f'Copying {len(unchanged)} unchanged files from local disk.')
+        for previous_file in unchanged:
+            local_file = previous_file.full_path.read_bytes()
+            save_to_pth = today.joinpath(previous_file.file_uri)
+            save_file(save_to_pth, local_file)
+            previous_file.base_path = today
+
+    finally:
+        device.close()
 
     if to_download or unchanged:
         records = [note.make_record() for note in it.chain(to_download, unchanged)]
-        save_records(records, json_md_file)
+        save_records(records, metadata_file)
 
     if args.cleanup:
         num_backups = abs(args.cleanup)

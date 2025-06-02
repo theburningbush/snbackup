@@ -84,7 +84,7 @@ class SetupConf:
         expr = r'^(\d{1,3}\.){3}\d{1,3}$'
         if not re.match(expr, addr):
             self._ip = 'x.x.x.x'
-            print(f'Invalid or empty IPv4 address {addr}')
+            print(f'Invalid or empty IPv4 address: {addr}')
             raise SystemExit('Aborting. Restart setup process with command "snbackup --setup"')
         self._ip = addr
 
@@ -101,7 +101,7 @@ class SetupConf:
         self._backups, self.cleanup = (num, True) if num > 0 else (0, False)
 
     def _create_folders(self, *, folder: str) -> None:
-        """Create save and config folders as needed"""
+        """Create save and config folders as needed."""
         try:
             if folder == 'save':
                 if not self.save.exists():
