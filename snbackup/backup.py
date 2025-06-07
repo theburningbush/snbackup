@@ -60,7 +60,7 @@ def parse_html(html_text: str, regex_str=r"const json = '(?P<json_str>{.*?})'") 
     return parsed
 
 
-def load_parsed(parsed: str, *, json_pl=False) -> list[dict] | list:
+def load_parsed(parsed: str, file_list=True) -> list[dict] | list:
     """Deserialize json extracted from device for creating file objects."""
     try:
         parsed_dict = json.loads(parsed)
@@ -68,9 +68,16 @@ def load_parsed(parsed: str, *, json_pl=False) -> list[dict] | list:
         logger.error(e)
         parsed_dict = {}
 
-    if json_pl:
-        return parsed_dict
-    return parsed_dict.get('fileList', [])
+    if file_list:
+        return parsed_dict.get('fileList', [])
+    return parsed_dict
+
+
+def etl(device: Device, uri: str, *, file_list=True) -> dict:
+    extract = talk_to_device(device, uri)
+    transform = parse_html(extract.text)
+    load = load_parsed(transform, file_list)
+    return load
 
 
 def device_uri_gen(device: Device, file_details: list[dict]) -> Iterator[tuple[str, ...]]:
@@ -80,9 +87,10 @@ def device_uri_gen(device: Device, file_details: list[dict]) -> Iterator[tuple[s
         if not file.get('isDirectory'):
             yield file_uri, file.get('date'), file.get('size')
         else:
-            html = talk_to_device(device, file_uri)
-            re_parse = parse_html(html.text)
-            new_file_details = load_parsed(re_parse)
+            # html = talk_to_device(device, file_uri)
+            # re_parse = parse_html(html.text)
+            # new_file_details = load_parsed(re_parse)
+            new_file_details = etl(device, file_uri)
             yield from device_uri_gen(device, new_file_details)
 
 
@@ -169,14 +177,13 @@ def run_inspection(to_download: set) -> None:
     logger.info('Inspection complete')
 
 
-# def device_meta(device: Device, html_path='/') -> tuple[str, int | None, int | None]:
-#     response = device.http_request(html_path)
-#     re_parse = parse_html(response.text)
-#     payload = load_parsed(re_parse, json_pl=True)
-#     name = payload.get('deviceName', 'Supernote Device')
-#     mem = payload.get('totalByteSize')
-#     mem_used = payload.get('usedMemory')
-#     return name, mem, mem_used
+def device_info(device: Device, html_uri='Document') -> tuple[str, int | None, int | None]:
+    payload = etl(device, html_uri, file_list=False)
+    return (
+        payload.get('deviceName', 'Supernote Device'),
+        payload.get('totalByteSize'),
+        payload.get('usedMemory'),
+    )
 
 
 def backup() -> None:
@@ -229,9 +236,14 @@ def backup() -> None:
         raise SystemExit()
 
     device = Device(device_url)
-    logger.info(f'Device at {device.base_url}')
-
+    
     try:
+        device.name, device.memory, device.mem_used = device_info(device)
+        logger.info(f'Backing up {device.name} at {device.base_url}')
+        percent_mem = device.mem_usage()
+        if percent_mem:
+            logger.info(f'Device using {percent_mem} of available onboard memory.')
+
         if args.upload:
             resp = upload_files(device, args.upload, FOLDERS.get(args.destination))
             msg = resp if resp else 'No files to upload.'
@@ -243,9 +255,10 @@ def backup() -> None:
         all_files = []
 
         for folder in args.notes:
-            httpx_response = talk_to_device(device, folder)
-            re_parse = parse_html(httpx_response.text)
-            device_data = load_parsed(re_parse)
+            # httpx_response = talk_to_device(device, folder)
+            # re_parse = parse_html(httpx_response.text)
+            # device_data = load_parsed(re_parse)
+            device_data = etl(device, folder)
             all_files.extend(device_data)
 
         today = today_pth(save_dir)
