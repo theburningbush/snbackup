@@ -74,6 +74,7 @@ def load_parsed(parsed: str, file_list=True) -> list[dict] | list:
 
 
 def etl(device: Device, uri: str, *, file_list=True) -> dict:
+    """Wrapper to handle the coupled and repeated ETL process."""
     extract = talk_to_device(device, uri)
     transform = parse_html(extract.text)
     load = load_parsed(transform, file_list)
@@ -87,9 +88,6 @@ def device_uri_gen(device: Device, file_details: list[dict]) -> Iterator[tuple[s
         if not file.get('isDirectory'):
             yield file_uri, file.get('date'), file.get('size')
         else:
-            # html = talk_to_device(device, file_uri)
-            # re_parse = parse_html(html.text)
-            # new_file_details = load_parsed(re_parse)
             new_file_details = etl(device, file_uri)
             yield from device_uri_gen(device, new_file_details)
 
@@ -127,7 +125,12 @@ def previous_record_gen(json_md: Path, *, previous=None) -> Iterator[tuple[str, 
         previous = previous or []
 
     for record in previous:
-        yield (record.get('current_loc'), record.get('uri'), record.get('modified'), record.get('size'))
+        yield (
+            record.get('current_loc'),
+            record.get('uri'),
+            record.get('modified'),
+            record.get('size'),
+        )
 
 
 def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
@@ -240,9 +243,8 @@ def backup() -> None:
     try:
         device.name, device.memory, device.mem_used = device_info(device)
         logger.info(f'Backing up {device.name} at {device.base_url}')
-        percent_mem = device.mem_usage()
-        if percent_mem:
-            logger.info(f'Device using {percent_mem} of available onboard memory.')
+        if percent_mem := device.mem_usage():
+            logger.info(f'{percent_mem} of available device memory used')
 
         if args.upload:
             resp = upload_files(device, args.upload, FOLDERS.get(args.destination))
@@ -255,9 +257,6 @@ def backup() -> None:
         all_files = []
 
         for folder in args.notes:
-            # httpx_response = talk_to_device(device, folder)
-            # re_parse = parse_html(httpx_response.text)
-            # device_data = load_parsed(re_parse)
             device_data = etl(device, folder)
             all_files.extend(device_data)
 
