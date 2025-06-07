@@ -4,6 +4,7 @@ import json
 import shutil
 import itertools as it
 from pathlib import Path
+from collections.abc import Iterator
 
 import httpx
 
@@ -59,17 +60,20 @@ def parse_html(html_text: str, regex_str=r"const json = '(?P<json_str>{.*?})'") 
     return parsed
 
 
-def load_parsed(parsed: str) -> list[dict] | list:
+def load_parsed(parsed: str, *, json_pl=False) -> list[dict] | list:
     """Deserialize json extracted from device for creating file objects."""
     try:
         parsed_dict = json.loads(parsed)
     except json.JSONDecodeError as e:
         logger.error(e)
         parsed_dict = {}
+
+    if json_pl:
+        return parsed_dict
     return parsed_dict.get('fileList', [])
 
 
-def device_uri_gen(device: Device, file_details: list[dict]):
+def device_uri_gen(device: Device, file_details: list[dict]) -> Iterator[tuple[str, ...]]:
     """Recursive generator to extract uri, modified date, and file size."""
     for file in file_details:
         file_uri = file.get('uri').lstrip('/')  # Drop anchor slash to call joinpath later and it work
@@ -100,9 +104,9 @@ def save_records(file_records: list[dict], json_md: Path) -> None:
         print(json.dumps(file_records), file=json_out)
 
 
-def previous_record_gen(json_md: Path, *, previous=None):
-    """Retreive last backup metadata found locally and yield
-    back relevant info to instantiate file objects.
+def previous_record_gen(json_md: Path, *, previous=None) -> Iterator[tuple[str, ...]]:
+    """Retreive last backup metadata found locally and yield back 
+    relevant info needed to instantiate file objects.
     """
     try:
         with open(json_md) as json_in:
@@ -124,11 +128,11 @@ def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
     return [file for file in symmetric if file not in current]
 
 
-def prepare_upload(ufile: list):
+def prepare_upload(ufile: list) -> Iterator[dict[str, tuple[str, bytes, str]]]:
     """Prepare file upload to send to device."""
     for file in (Path(file) for file in ufile):
         if file.is_file() and file.suffix.casefold() in EXTS:
-            yield {f'{file.name}': open(file, 'rb')}
+            yield {file.name: (file.name, file.read_bytes(), 'application/octet-stream')}
 
 
 def upload_files(device: Device, to_upload: list, destination: str) -> str | None:
@@ -163,6 +167,16 @@ def run_inspection(to_download: set) -> None:
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
     logger.info('Inspection complete')
+
+
+# def device_meta(device: Device, html_path='/') -> tuple[str, int | None, int | None]:
+#     response = device.http_request(html_path)
+#     re_parse = parse_html(response.text)
+#     payload = load_parsed(re_parse, json_pl=True)
+#     name = payload.get('deviceName', 'Supernote Device')
+#     mem = payload.get('totalByteSize')
+#     mem_used = payload.get('usedMemory')
+#     return name, mem, mem_used
 
 
 def backup() -> None:

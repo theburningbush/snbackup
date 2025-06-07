@@ -3,7 +3,7 @@ from time import perf_counter
 
 
 class Timer:
-    """Context manager class to time code execution inside a with block"""
+    """Context manager to time code execution."""
 
     def __init__(self):
         self.runs = []
@@ -20,7 +20,8 @@ class Timer:
 
 class CustomLogger:
     """Used to setup a "standard" logger that allows for
-    logging to file as well as to console if desired"""
+    logging to file as well as to console if desired.
+    """
 
     log_files = []
 
@@ -31,13 +32,13 @@ class CustomLogger:
         self.logger.setLevel(self.level)
 
     def to_console(self) -> None:
-        """Allows logs to print to screen"""
+        """Allows logs to print to screen."""
         self.console = logging.StreamHandler()
         self.console.setFormatter(self.format)
         self.logger.addHandler(self.console)
 
     def to_file(self, fname: str) -> None:
-        """Setup a log file to be used"""
+        """Setup a log file to be used."""
         # This deals with __file__ being passed
         if fname.endswith('.py'):
             fname = fname.removesuffix('.py')
@@ -49,8 +50,9 @@ class CustomLogger:
 
     @classmethod
     def truncate_logs(cls, num_lines: int) -> None:
-        """Truncates the log files from all instantiated objects
-        that also call to_file method."""
+        """Truncates the log files from all instantiated 
+        objects that also call to_file method.
+        """
 
         for file in cls.log_files:
             with open(file, 'rt') as log_in:

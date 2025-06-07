@@ -78,7 +78,7 @@ def user_input() -> Namespace:
 
 
 def locate_config() -> Path:
-    """Look in potential config locations and return first valid"""
+    """Look in potential config locations and return first valid."""
     conf_locations = (
         os.getenv('SNBACKUP_CONF', ''),
         SetupConf.home_conf,
@@ -92,7 +92,7 @@ def locate_config() -> Path:
 
 
 def load_config(config_pth: Path) -> dict:
-    """Deserialize json config file"""
+    """Deserialize json config file."""
     try:
         with open(config_pth) as config_in:
             config_dict = json.load(config_in)
@@ -104,7 +104,7 @@ def load_config(config_pth: Path) -> dict:
 
 
 def today_pth(save_dir: Path) -> Path:
-    """Create today's Path object in YYYY-MM-DD format"""
+    """Create today's Path object in YYYY-MM-DD format."""
     return save_dir.joinpath(str(date.today()))
 
 
@@ -115,13 +115,13 @@ def check_version(name: str) -> str:
 
 
 def bytes_to_mb(byte_size: int) -> str:
-    """Convert bytes to Megabytes"""
+    """Convert bytes to megabytes."""
     return format(byte_size / 1000**2, '.2f')
 
 
 def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
     """Counts number of backup folders and returns
-    oldest and newest found on local disk
+    oldest and newest found on local disk.
     """
     previous = sorted(directory.glob(pattern))
     if not previous:
@@ -130,7 +130,7 @@ def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
 
 
 def recursive_scan(path: Path) -> int:
-    """Scan a directory and return total size of files in bytes"""
+    """Scan a directory and return total size of files in bytes."""
     if path.is_file():
         return path.stat().st_size
     return sum(recursive_scan(item) for item in path.iterdir())
