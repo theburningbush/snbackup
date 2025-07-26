@@ -40,7 +40,7 @@ class SnFiles:
             raise BadDateError(e) from None
 
     @property
-    def file_size(self) -> str:
+    def file_size(self) -> int:
         return self._file_size
 
     @property

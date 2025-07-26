@@ -98,7 +98,7 @@ def save_file(local_pth: Path, file: bytes) -> None:
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
-    with open(local_pth, 'wb') as file_output:
+    with local_pth.open('wb', encoding='utf-8') as file_output:
         file_output.write(file)
         file_output.flush()
         os.fsync(file_output.fileno())
@@ -107,7 +107,7 @@ def save_file(local_pth: Path, file: bytes) -> None:
 def save_records(file_records: list[dict], json_md: Path) -> None:
     """Persist today's file metadata to json file."""
     logger.info('Saving file records to metadata json file')
-    with open(json_md, 'wt') as json_out:
+    with json_md.open('wt', encoding='utf-8') as json_out:
         print(json.dumps(file_records), file=json_out)
 
 
@@ -116,7 +116,7 @@ def previous_record_gen(json_md: Path, *, previous=None) -> Iterator[tuple[str, 
     relevant info needed to instantiate file objects.
     """
     try:
-        with open(json_md) as json_in:
+        with json_md.open(encoding='utf-8') as json_in:
             previous = json.loads(json_in.read())
     except FileNotFoundError:
         logger.warning('Unable to locate metadata file. Creating new file')
@@ -136,9 +136,7 @@ def previous_record_gen(json_md: Path, *, previous=None) -> Iterator[tuple[str, 
 
 def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
     """Look for files no longer on device from last backup."""
-    symmetric = current.symmetric_difference(previous)
-    return [file for file in symmetric if file not in current]
-
+    return list(previous - current)
 
 def prepare_upload(ufile: list) -> Iterator[dict[str, tuple[str, bytes, str]]]:
     """Prepare file upload to send to device."""

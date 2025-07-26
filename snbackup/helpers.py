@@ -128,7 +128,10 @@ def count_backups(directory: Path, pattern=FOLDER_PATTERN) -> tuple[int, Path, P
     """Counts number of backup folders and returns
     oldest and newest found on local disk.
     """
-    previous = sorted(d for d in directory.iterdir() if d.is_dir() and pattern.fullmatch(d.name))
+    previous = sorted(
+        d for d in directory.iterdir() 
+        if d.is_dir() and pattern.fullmatch(d.name)
+    )
     if not previous:
         return 0, directory, directory
     return len(previous), previous[0], previous[-1]
