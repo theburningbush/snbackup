@@ -15,6 +15,7 @@ from .utilities import CustomLogger, truncate_log
 from .helpers import (
     EXTS,
     FOLDERS,
+    FOLDER_PATTERN,
     user_input,
     check_version,
     today_pth,
@@ -157,11 +158,14 @@ def upload_files(device: Device, to_upload: list, destination: str) -> str | Non
     return 'Upload complete' if response else None
 
 
-def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='202?-*') -> None:
+def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern=FOLDER_PATTERN) -> None:
     """Delete old backups from the backup save directory on local disk."""
     if num_backups > 0 and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
-        previous_folders = sorted(base_dir.glob(pattern), reverse=True)
+        previous_folders = sorted(
+            [d for d in base_dir.iterdir() if d.is_dir() and pattern.fullmatch(d.name)], 
+            reverse=True
+        )
         while len(previous_folders) > num_backups:
             old = previous_folders.pop()
             logger.info(f'Removing backup folder: {old}')
