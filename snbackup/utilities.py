@@ -55,11 +55,11 @@ class CustomLogger:
         """
 
         for file in cls.log_files:
-            with open(file, 'rt') as log_in:
+            with open(file, encoding='utf-8') as log_in:
                 lines = log_in.readlines()
 
             if len(lines) > num_lines:
-                with open(file, 'wt') as log_out:
+                with open(file, 'wt', encoding='utf-8') as log_out:
                     log_out.writelines(lines[-num_lines:])
 
     def __repr__(self) -> str:
