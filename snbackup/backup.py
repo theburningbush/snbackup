@@ -98,7 +98,7 @@ def save_file(local_pth: Path, file: bytes) -> None:
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
-    with local_pth.open('wb', encoding='utf-8') as file_output:
+    with local_pth.open('wb') as file_output:
         file_output.write(file)
         file_output.flush()
         os.fsync(file_output.fileno())
