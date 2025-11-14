@@ -124,7 +124,7 @@ If no destination is specified after the `-d` flag the device's **Document** fol
 ```json
 {
     "save_dir": "/Users/devin/Documents/Supernote",
-    "device_url": "http://192.168.1.105:8089/"
+    "device_url": "http://192.168.1.105:8089/",
     "num_backups": 7,
     "cleanup": true,
     "truncate_log": 500
