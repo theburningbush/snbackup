@@ -126,5 +126,5 @@ class SetupConf:
     def write_config(self) -> None:
         self._create_folders(folder='save')
         self._create_folders(folder='config')
-        with open(self.home_conf, 'wt') as config:
+        with open(self.home_conf, 'wt', encoding='utf-8') as config:
             json.dump(self._construct(), config, indent=4)

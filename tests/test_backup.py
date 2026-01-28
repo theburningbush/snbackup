@@ -283,4 +283,4 @@ def test_check_for_deleted():
     pre_notes.add(previous_1)
     pre_notes.add(previous_2)
     
-    assert backup.check_for_deleted(cur_notes, pre_notes) == [previous_1, previous_2]
+    assert sorted(backup.check_for_deleted(cur_notes, pre_notes)) == [previous_1, previous_2]

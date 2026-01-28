@@ -4,6 +4,7 @@ import json
 import shutil
 import itertools as it
 from pathlib import Path
+from collections.abc import Iterator
 
 import httpx
 
@@ -14,6 +15,7 @@ from .utilities import CustomLogger, truncate_log
 from .helpers import (
     EXTS,
     FOLDERS,
+    FOLDER_PATTERN,
     user_input,
     check_version,
     today_pth,
@@ -59,26 +61,35 @@ def parse_html(html_text: str, regex_str=r"const json = '(?P<json_str>{.*?})'") 
     return parsed
 
 
-def load_parsed(parsed: str) -> list[dict] | list:
+def load_parsed(parsed: str, file_list=True) -> list[dict] | list:
     """Deserialize json extracted from device for creating file objects."""
     try:
         parsed_dict = json.loads(parsed)
     except json.JSONDecodeError as e:
         logger.error(e)
         parsed_dict = {}
-    return parsed_dict.get('fileList', [])
+
+    if file_list:
+        return parsed_dict.get('fileList', [])
+    return parsed_dict
 
 
-def device_uri_gen(device: Device, file_details: list[dict]):
+def etl(device: Device, uri: str, *, file_list=True) -> dict:
+    """Wrapper to handle the coupled and repeated ETL process."""
+    extract = talk_to_device(device, uri)
+    transform = parse_html(extract.text)
+    load = load_parsed(transform, file_list)
+    return load
+
+
+def device_uri_gen(device: Device, file_details: list[dict]) -> Iterator[tuple[str, ...]]:
     """Recursive generator to extract uri, modified date, and file size."""
     for file in file_details:
         file_uri = file.get('uri').lstrip('/')  # Drop anchor slash to call joinpath later and it work
         if not file.get('isDirectory'):
             yield file_uri, file.get('date'), file.get('size')
         else:
-            html = talk_to_device(device, file_uri)
-            re_parse = parse_html(html.text)
-            new_file_details = load_parsed(re_parse)
+            new_file_details = etl(device, file_uri)
             yield from device_uri_gen(device, new_file_details)
 
 
@@ -87,7 +98,7 @@ def save_file(local_pth: Path, file: bytes) -> None:
     local_pth.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f'Saving {local_pth.stem!r} to {local_pth}')
-    with open(local_pth, 'wb') as file_output:
+    with local_pth.open('wb') as file_output:
         file_output.write(file)
         file_output.flush()
         os.fsync(file_output.fileno())
@@ -96,16 +107,16 @@ def save_file(local_pth: Path, file: bytes) -> None:
 def save_records(file_records: list[dict], json_md: Path) -> None:
     """Persist today's file metadata to json file."""
     logger.info('Saving file records to metadata json file')
-    with open(json_md, 'wt') as json_out:
+    with json_md.open('wt', encoding='utf-8') as json_out:
         print(json.dumps(file_records), file=json_out)
 
 
-def previous_record_gen(json_md: Path, *, previous=None):
-    """Retreive last backup metadata found locally and yield
-    back relevant info to instantiate file objects.
+def previous_record_gen(json_md: Path, *, previous=None) -> Iterator[tuple[str, ...]]:
+    """Retreive last backup metadata found locally and yield back 
+    relevant info needed to instantiate file objects.
     """
     try:
-        with open(json_md) as json_in:
+        with json_md.open(encoding='utf-8') as json_in:
             previous = json.loads(json_in.read())
     except FileNotFoundError:
         logger.warning('Unable to locate metadata file. Creating new file')
@@ -115,20 +126,23 @@ def previous_record_gen(json_md: Path, *, previous=None):
         previous = previous or []
 
     for record in previous:
-        yield (record.get('current_loc'), record.get('uri'), record.get('modified'), record.get('size'))
+        yield (
+            record.get('current_loc'),
+            record.get('uri'),
+            record.get('modified'),
+            record.get('size'),
+        )
 
 
 def check_for_deleted(current: set, previous: set) -> list[SnFiles]:
     """Look for files no longer on device from last backup."""
-    symmetric = current.symmetric_difference(previous)
-    return [file for file in symmetric if file not in current]
+    return list(previous - current)
 
-
-def prepare_upload(ufile: list):
+def prepare_upload(ufile: list) -> Iterator[dict[str, tuple[str, bytes, str]]]:
     """Prepare file upload to send to device."""
     for file in (Path(file) for file in ufile):
         if file.is_file() and file.suffix.casefold() in EXTS:
-            yield {f'{file.name}': open(file, 'rb')}
+            yield {file.name: (file.name, file.read_bytes(), 'application/octet-stream')}
 
 
 def upload_files(device: Device, to_upload: list, destination: str) -> str | None:
@@ -138,15 +152,18 @@ def upload_files(device: Device, to_upload: list, destination: str) -> str | Non
         response = talk_to_device(device, destination, file)
         for resp in response.json():
             file, size = resp.get('name'), resp.get('size', 0)
-            logger.info(f'Uploaded {file} to {destination} folder ({bytes_to_mb(size)} MB)')
+            logger.info(f'Uploaded {file!r} to {destination!r} folder ({bytes_to_mb(size)} MB)')
     return 'Upload complete' if response else None
 
 
-def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='202?-*') -> None:
+def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern=FOLDER_PATTERN) -> None:
     """Delete old backups from the backup save directory on local disk."""
     if num_backups > 0 and cleanup:
         logger.info(f'Removing old backups, keeping last {num_backups}')
-        previous_folders = sorted(base_dir.glob(pattern), reverse=True)
+        previous_folders = sorted(
+            [d for d in base_dir.iterdir() if d.is_dir() and pattern.fullmatch(d.name)], 
+            reverse=True
+        )
         while len(previous_folders) > num_backups:
             old = previous_folders.pop()
             logger.info(f'Removing backup folder: {old}')
@@ -155,14 +172,23 @@ def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern='20
 
 def run_inspection(to_download: set) -> None:
     """Inspect current files, determine what's new or changed, and log that out."""
-    logger.info('Inspecting changes only')
+    logger.info('-- Inspecting for changes only --')
     if len(to_download) > 0:
-        logger.info('Listing new or updated files to download:')
+        logger.info('New or updated files to download:')
     else:
-        logger.info('No new or updated files to download.')
+        logger.info('No new or updated files to download')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
-    logger.info('Inspection complete')
+    logger.info('-- Inspection complete --')
+
+
+def device_info(device: Device, html_uri='Document') -> tuple[str, int | None, int | None]:
+    payload = etl(device, html_uri, file_list=False)
+    return (
+        payload.get('deviceName', 'Supernote Device'),
+        payload.get('totalByteSize'),
+        payload.get('usedMemory'),
+    )
 
 
 def backup() -> None:
@@ -215,9 +241,13 @@ def backup() -> None:
         raise SystemExit()
 
     device = Device(device_url)
-    logger.info(f'Device at {device.base_url}')
-
+    
     try:
+        device.name, device.memory, device.mem_used = device_info(device)
+        logger.info(f'Found device {device.name} at {device.base_url}')
+        # if percent_mem := device.mem_usage():
+        #     logger.info(f'{percent_mem} of available device memory used')
+
         if args.upload:
             resp = upload_files(device, args.upload, FOLDERS.get(args.destination))
             msg = resp if resp else 'No files to upload.'
@@ -229,9 +259,7 @@ def backup() -> None:
         all_files = []
 
         for folder in args.notes:
-            httpx_response = talk_to_device(device, folder)
-            re_parse = parse_html(httpx_response.text)
-            device_data = load_parsed(re_parse)
+            device_data = etl(device, folder)
             all_files.extend(device_data)
 
         today = today_pth(save_dir)

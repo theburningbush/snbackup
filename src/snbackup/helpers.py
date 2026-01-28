@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from pathlib import Path
 from datetime import date
@@ -32,6 +33,8 @@ EXTS = {
     '.xps',
     '.mobi',
 }
+
+FOLDER_PATTERN = re.compile(r'^\d{4}-\d{2}-\d{2}$')  # YYYY-MM-DD
 
 
 def user_input() -> Namespace:
@@ -78,7 +81,7 @@ def user_input() -> Namespace:
 
 
 def locate_config() -> Path:
-    """Look in potential config locations and return first valid"""
+    """Look in potential config locations and return first valid."""
     conf_locations = (
         os.getenv('SNBACKUP_CONF', ''),
         SetupConf.home_conf,
@@ -92,45 +95,50 @@ def locate_config() -> Path:
 
 
 def load_config(config_pth: Path) -> dict:
-    """Deserialize json config file"""
+    """Deserialize json config file to valid dict."""
     try:
-        with open(config_pth) as config_in:
+        with config_pth.open(encoding='utf-8') as config_in:
             config_dict = json.load(config_in)
     except (FileNotFoundError, IsADirectoryError):
         raise SystemExit(f'Required json config file not found at {config_pth!s}.')
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise SystemExit(f'The json config is malformed or invalid. Check your config at {config_pth!s}')
+    
+    if not isinstance(config_dict, dict):
+        raise SystemExit(f'Expected json config dictionary, got {type(config_dict).__name__} instead.')
     return config_dict
 
 
 def today_pth(save_dir: Path) -> Path:
-    """Create today's Path object in YYYY-MM-DD format"""
+    """Create today's Path object in YYYY-MM-DD format."""
     return save_dir.joinpath(str(date.today()))
 
 
 def check_version(name: str) -> str:
     from importlib.metadata import version
-
     return f'{name} v{version(name)}'
 
 
 def bytes_to_mb(byte_size: int) -> str:
-    """Convert bytes to Megabytes"""
+    """Convert bytes to megabytes."""
     return format(byte_size / 1000**2, '.2f')
 
 
-def count_backups(directory: Path, pattern='202?-*') -> tuple[int, Path, Path]:
+def count_backups(directory: Path, pattern=FOLDER_PATTERN) -> tuple[int, Path, Path]:
     """Counts number of backup folders and returns
-    oldest and newest found on local disk
+    oldest and newest found on local disk.
     """
-    previous = sorted(directory.glob(pattern))
+    previous = sorted(
+        d for d in directory.iterdir() 
+        if d.is_dir() and pattern.fullmatch(d.name)
+    )
     if not previous:
         return 0, directory, directory
     return len(previous), previous[0], previous[-1]
 
 
 def recursive_scan(path: Path) -> int:
-    """Scan a directory and return total size of files in bytes"""
+    """Scan a directory and return total size of files in bytes."""
     if path.is_file():
         return path.stat().st_size
     return sum(recursive_scan(item) for item in path.iterdir())
