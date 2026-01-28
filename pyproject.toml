@@ -4,7 +4,7 @@ version = "2.3.0"
 description = "CLI tool to backup Supernote files"
 readme = "README.md"
 authors = [
-    { name = "devin", email = "devinwrx@gmail.com" }
+    { name = "devdevindev", email = "devinwrx@gmail.com" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
