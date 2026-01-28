@@ -17,7 +17,7 @@ This tool will *probably* work on any of the Supernote devices running the most 
 
 ### Setup Process:  
 
-1. Install with `pip install snbackup` into your Python virtual environment. I prefer to use [pipx](https://pipx.pypa.io/stable/) to make it globally available on my system.  
+1. Install with `pip install snbackup` into your Python virtual environment. You could also use a tool like [pipx](https://pipx.pypa.io/stable/) to make it globally available or [uvx](https://docs.astral.sh/uv/guides/tools/#running-tools). The project itself uses [uv](https://docs.astral.sh/uv/) for local development and dependency management. Also included is a requirements.txt.  
 
 2. Create a folder somewhere on your computer to store your Supernote backups.  
 
