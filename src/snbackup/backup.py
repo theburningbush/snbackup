@@ -152,7 +152,7 @@ def upload_files(device: Device, to_upload: list, destination: str) -> str | Non
         response = talk_to_device(device, destination, file)
         for resp in response.json():
             file, size = resp.get('name'), resp.get('size', 0)
-            logger.info(f'Uploaded {file} to {destination} folder ({bytes_to_mb(size)} MB)')
+            logger.info(f'Uploaded {file!r} to {destination!r} folder ({bytes_to_mb(size)} MB)')
     return 'Upload complete' if response else None
 
 
@@ -172,14 +172,14 @@ def cleanup_backups(base_dir: Path, *, num_backups=0, cleanup=False, pattern=FOL
 
 def run_inspection(to_download: set) -> None:
     """Inspect current files, determine what's new or changed, and log that out."""
-    logger.info('Inspecting changes only')
+    logger.info('-- Inspecting for changes only --')
     if len(to_download) > 0:
-        logger.info('Listing new or updated files to download:')
+        logger.info('New or updated files to download:')
     else:
-        logger.info('No new or updated files to download.')
+        logger.info('No new or updated files to download')
     for c, file in enumerate(to_download, start=1):
         logger.info(f'{c}.{file.file_uri} ({bytes_to_mb(file.file_size)} MB)')
-    logger.info('Inspection complete')
+    logger.info('-- Inspection complete --')
 
 
 def device_info(device: Device, html_uri='Document') -> tuple[str, int | None, int | None]:
@@ -244,9 +244,9 @@ def backup() -> None:
     
     try:
         device.name, device.memory, device.mem_used = device_info(device)
-        logger.info(f'Backing up {device.name} at {device.base_url}')
-        if percent_mem := device.mem_usage():
-            logger.info(f'{percent_mem} of available device memory used')
+        logger.info(f'Found device {device.name} at {device.base_url}')
+        # if percent_mem := device.mem_usage():
+        #     logger.info(f'{percent_mem} of available device memory used')
 
         if args.upload:
             resp = upload_files(device, args.upload, FOLDERS.get(args.destination))
